@@ -1,0 +1,25 @@
+# ============================================================================
+# dsh-dev-dsh —— DSH bundle patch（插件自带的挂载声明）
+# ============================================================================
+# 本文件是插件的挂载声明：package.json 的 `dsh.bundle.patch` 指向它，dsh 在
+# `dsh plugin --profile <p> add` 之后按已装状态把本包写入 `dsh.profile.bundles`，
+# 因此**无需手改 profile 的 cordis.patch.yml**。
+#
+#   dsh plugin --profile web add @yanqd0/dsh-dev-dsh
+#
+# 三条硬约束（踩过的坑，改动前先读）：
+# 1. 新条目必须用 `insert:` 列表包裹——裸 `- id/name` 行是配置*覆盖*语义，
+#    会报 `patch: entry "dsh-dev-dsh" not found`。
+# 2. `config` 必须显式给（空对象即可）：插件导出的是 zod object Config，
+#    缺省 config 的校验会失败（`invalid config: - Required (at )`）。
+# 3. 与 profile 里手写的同一 `insert` 段并存会重复挂载
+#    （`duplicate loader entry id: dsh-dev-dsh`，profile 直接起不来）；
+#    两者只能留其一。
+#
+# 本文件必须列入 package.json 的 `files` 随包发布：dsh 从已安装包的目录读它。
+# ============================================================================
+
+- insert:
+    - id: dsh-dev-dsh
+      name: '@yanqd0/dsh-dev-dsh'
+      config: {}
