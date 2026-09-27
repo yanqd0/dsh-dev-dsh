@@ -18,7 +18,8 @@
   },
   "files": [
     "dist",
-    "cordis.patch.yml"
+    "cordis.patch.yml",
+    "scripts/install-skill-postinstall.mjs"
   ],
   "dsh": {
     "bundle": {
@@ -26,7 +27,8 @@
     }
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && node scripts/build-skill.mjs",
+    "postinstall": "node scripts/install-skill-postinstall.mjs",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src",

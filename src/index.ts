@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { installSkill } from './install-skill.js';
+
 /**
  * dsh-dev-dsh — a DSH plugin for developing DSH plugins.
  *
@@ -24,4 +26,8 @@ export type Config = z.infer<typeof Config>;
  * cordis plugin entry. `ctx` is intentionally unused in 0.1.0: the plugin
  * consumes no host services.
  */
-export function apply(_ctx: unknown, _config: Config): void {}
+export function apply(_ctx: unknown, config: Config): void {
+  if (config.autoInstallSkill) {
+    installSkill();
+  }
+}
