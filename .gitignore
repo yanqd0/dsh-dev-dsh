@@ -1,0 +1,8 @@
+3rdp
+node_modules
+lib
+dist
+coverage
+*.log
+# Local-only symlink to a sibling checkout; dangling for anyone else.
+notes/dsh-old
