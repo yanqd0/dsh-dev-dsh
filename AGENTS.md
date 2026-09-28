@@ -22,7 +22,7 @@
 - **`skill/` 是 skill 的单一真源**：构建期由 `scripts/build-skill.mjs` 整目录拷入 `dist/skill`，`files` 只发布 `dist`、`cordis.patch.yml` 与 postinstall 脚本；缺 `skill/SKILL.md` 时构建**硬失败**（宁可不出包，也不出没有 skill 的包）。
 - **`install-skill` 是 content-sync，不是无条件覆盖**（`src/install-skill.ts`）：目标 `SKILL.md` 已一致就不动（避免每次开会话都抖动）；目标本身是 symlink 则**不覆盖**（开发流可能用它接管该目录）；每个失败只记一行并返回 `{ ok: false }`，**绝不使插件加载或包安装失败**。
 - **两个触发点**：`package.json` 的 postinstall（npm 总会跑；pnpm 10+ 默认拦截依赖构建脚本，需 allowlist）与宿主 `apply()` 内的同步（**保底路径**，postinstall 被拦也能生效）。
-- **`cordis.patch.yml` 是插件的挂载声明**，三条契约（改动前先读文件头注释）：条目必须用 `insert:` 列表包裹（裸 `- id/name` 是覆盖语义）、`config` 必须显式给出（空对象即可）、不可与 profile 里手写的同一 `insert` 段并存；该文件必须留在 `files` 随包发布。
+- **`cordis.patch.yml` 是插件的挂载声明**，三条契约（改动前先读文件头注释）：条目必须用 `insert:` 列表包裹（裸 `- id/name` 是覆盖语义）、`config` 必须显式给出（空对象即可）、与 profile 里手写的同 id 条目并存**不报错**——0.1.7-rc.2 是 last-wins 静默复用/替换（旧说法 `duplicate loader entry id` 在 0.1.7-rc.2 已无此抛错，见 issue #16）；该文件必须留在 `files` 随包发布。
 - **`pnpm-workspace.yaml` 的 `allowBuilds: esbuild: true` 勿删**：删掉会让 pnpm 拒跑构建脚本，`install` / `build` 直接失败。
 - **`engines.node >= 22.19`**（tsup `target: node20` 是产物目标，不是运行下限）；CI 统一 node 22。
 - **`0.1.0` 不含客户端 / UI 能力**：不得在本仓文档或 skill 中承诺客户端插件构建（属 `0.2.0`）。

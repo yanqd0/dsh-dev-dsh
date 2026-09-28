@@ -12,9 +12,11 @@
 #    会报 `patch: entry "dsh-dev-dsh" not found`。
 # 2. `config` 必须显式给（空对象即可）：插件导出的是 zod object Config，
 #    缺省 config 的校验会失败（`invalid config: - Required (at )`）。
-# 3. 与 profile 里手写的同一 `insert` 段并存会重复挂载
-#    （`duplicate loader entry id: dsh-dev-dsh`，profile 直接起不来）；
-#    两者只能留其一。
+# 3. 与 profile 里手写的同 id 条目并存**不会报错**：0.1.7-rc.2 的 Loader 对同 id
+#    是 last-wins 的静默复用/替换（entry 被 move/update），profile 照常启动，
+#    但后写入者生效。旧说法 `duplicate loader entry id` 在 0.1.7-rc.2 已无此抛错
+#    （见 issue #16；证据是 vendor/loader/src/config/group.ts 的 create()/ensureId()）；
+#    因此两者仍只能留其一，否则配置被静默覆盖、更难排查。
 #
 # 本文件必须列入 package.json 的 `files` 随包发布：dsh 从已安装包的目录读它。
 # ============================================================================
