@@ -10,7 +10,7 @@ monorepo.
 
 ## Why this exists
 
-dsh already ships capable authoring support for the *in-profile* case: Creator
+dsh already ships capable authoring support for the _in-profile_ case: Creator
 mode (the `cordis` agent preset) carries the `cordis-plugin-development` skill
 with templates, the `cordis_inspect_*` runtime API probes, and
 `plugin_manager`. Those cover "write a small plugin that installs into my
@@ -64,18 +64,41 @@ package.
 
 ```
 package.json          the dsh plugin package
-cordis.patch.yml      bundle patch that mounts the plugin   (0.1.0)
-src/                  plugin source                          (0.1.0)
-skill/                the skill this plugin ships and installs (0.1.0)
+cordis.patch.yml      bundle patch that mounts the plugin
+src/                  plugin source: the host entry, the skill sync, and their tests
+skill/                the skill this plugin ships and installs (single source of truth)
+scripts/              build-time skill copy + the postinstall install guard
 notes/                evaluation and decision records
+
+dist/                 build output (gitignored): the ESM entries, their types, and a copy of skill/
+dist/skill/           what actually ships and gets installed
 ```
+
+`dist/` is generated and never committed. `notes/` and `AGENTS.md` are repository
+docs — they are not part of the published package: the tarball carries `dist/`,
+`cordis.patch.yml`, and the postinstall script, and nothing else (see `files` in
+`package.json`).
 
 ## Development
 
-Nothing to install yet; the package has no dependencies at this stage.
+```bash
+pnpm install        # zod is a runtime dependency; esbuild is allow-listed for builds
+pnpm build          # bundles dist/ (ESM + types) and copies skill/ into dist/skill
+pnpm test           # vitest
+pnpm check-types    # tsc --noEmit
+pnpm lint           # eslint src
+pnpm pack:check     # pnpm pack --dry-run: inspect what would actually be published
+```
 
-`3rdp/deepseek-harness/` is a read-only reference checkout of the harness used
-for source archaeology; it is gitignored and not part of the package.
+Issue, plan, and milestone tracking lives in `mint`, not in these docs;
+[AGENTS.md](AGENTS.md) is the contributor-facing project navigation.
+
+`3rdp/` is a local, gitignored reference checkout of the harness used for source
+archaeology. It is **not** part of the package and is **not required**: a clone
+or install without it builds, runs, and tests normally. Where it is present,
+`src/facts.test.ts` re-verifies the upstream dsh facts that `skill/` relies on
+and reports any that have moved; where it is absent, that re-verification is
+skipped and nothing else changes.
 
 ## License
 

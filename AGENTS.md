@@ -58,7 +58,7 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `skill/SKILL.md`：skill 单一真源。**本文件的正文与 references 仍是骨架**（含 `<!-- PLACEHOLDER -->`），补全属 mint plan #2（issue #3 / #10）。
 - `notes/evaluation.md`：方向评估与决策记录（含 §8 决策、§8.5 版本规划），是「为什么这样定位」的权威来源；`notes/dsh-old/` 是指向 `../../my-agents/notes/dsh` 的**本机符号链接**，在别的机器上是 dangling，不作为项目内容。
 - `3rdp/`：**开发期本地参考**，gitignored。当前只有 dsh 代码库的只读快照（`deepseek-harness`），用于源码考古；**测试 / 生产（用户环境安装）下默认不存在，且不存在时构建、运行、`pnpm test` 全部正常**。未来可能增补其它参考（如 cordis，是否纳入待评估）；增补时须同步 `src/facts.test.ts` 的 fact 清单。
-- `src/facts.test.ts`：skill 中 dsh 事实的**可校验来源**。skill 正文里引用的上游路径与版本 pin 都记在这里；改 skill 事实必须同步改它，反之亦然。`3rdp/` 不在时校验层静默短路，清单元数据断言仍执行。
+- `src/facts.test.ts`：skill 中 dsh 事实的**唯一可校验来源**。每条 fact 记 `source`（`<repo>@<tag>`，如 `deepseek-harness@dsh-v0.1.7-rc.2`）、`path`、可选 `line`。元数据断言始终执行（含「skill 引用的上游路径必须都已登记」）；校验层只在 `3rdp/<repo>/` 存在时才跑：先比对 checkout 版本与 pin，再逐条查路径与行号，失效时一次性列出全部条目。**无 `3rdp/` 时不报错、不告警**——那是测试/生产环境的常态。skill 正文每引用一条上游事实，必须同步加一条 fact，反之亦然。
 - `README.md`（英，对外）/ `AGENTS.md`（中，对内）；计划真源是 mint 里的 plan / issue，**不是**任何 md 文档。
 
 ## 文档导航
