@@ -10,11 +10,17 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { basename, dirname, join } from 'node:path';
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { SKILL_NAME, installSkill, resolveDshHome, skillTarget } from './install-skill.ts';
+import {
+  SKILL_NAME,
+  installSkill,
+  resolveDshHome,
+  skillSource,
+  skillTarget,
+} from './install-skill.ts';
 
 const created: string[] = [];
 
@@ -39,6 +45,13 @@ function makeSource(body = 'body', extra: Record<string, string> = {}): string {
 
 afterEach(() => {
   for (const dir of created.splice(0)) rmSync(dir, { recursive: true, force: true });
+  vi.restoreAllMocks();
+});
+
+describe('skillSource', () => {
+  it('is the bundled skill directory beside the module', () => {
+    expect(basename(skillSource())).toBe('skill');
+  });
 });
 
 describe('resolveDshHome', () => {
@@ -91,9 +104,9 @@ describe('installSkill', () => {
     const dshHome = tempDir();
     installSkill({ dshHome, source: makeSource('v1') });
 
-    expect(installSkill({ dshHome, source: makeSource('v1', { 'references/a.md': 'a1' }) })).toEqual(
-      { ok: true }
-    );
+    expect(
+      installSkill({ dshHome, source: makeSource('v1', { 'references/a.md': 'a1' }) })
+    ).toEqual({ ok: true });
     expect(readFileSync(join(skillTarget(dshHome), 'references/a.md'), 'utf8')).toBe('a1');
   });
 
@@ -135,6 +148,16 @@ describe('installSkill', () => {
     });
     expect(logs).toHaveLength(1);
     expect(existsSync(skillTarget(dshHome))).toBe(false);
+  });
+
+  it('defaults to one stderr line per failure', () => {
+    const write = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+
+    expect(installSkill({ dshHome: tempDir(), source: join(tempDir(), 'not-there') })).toEqual({
+      ok: false,
+      reason: 'source missing',
+    });
+    expect(write).toHaveBeenCalledTimes(1);
   });
 
   it('reports an unwritable target without throwing', () => {
