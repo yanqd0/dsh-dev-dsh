@@ -1,4 +1,4 @@
-import { cpSync, existsSync, lstatSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, lstatSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -12,12 +12,14 @@ import { fileURLToPath } from 'node:url';
  * 2. The host plugin calls {@link installSkill} from `apply()` on every load —
  *    the guaranteed path, and the one that survives a blocked postinstall.
  *
- * Semantics are a content SYNC: a target whose `SKILL.md` already matches the
- * bundled one is left untouched (no churn on every session start); anything
- * else is replaced. A target that already IS a symlink is left alone — a dev
- * flow that wants to own the directory with a symlink must not be clobbered.
- * Every failure logs one line and returns `{ ok: false }`; it never breaks
- * plugin load or package install.
+ * Semantics are a content SYNC: a target whose whole tree (SKILL.md and every
+ * reference file) already matches the bundled one is left untouched (no churn
+ * on every session start); anything else is replaced. Comparing the whole tree
+ * — not just SKILL.md — is what keeps a changed reference file from leaving a
+ * stale install behind. A target that already IS a symlink is left alone — a
+ * dev flow that wants to own the directory with a symlink must not be
+ * clobbered. Every failure logs one line and returns `{ ok: false }`; it never
+ * breaks plugin load or package install.
  */
 
 const DIRNAME = dirname(fileURLToPath(import.meta.url));
@@ -45,14 +47,51 @@ export function skillTarget(dshHome: string): string {
   return join(dshHome, 'skills', SKILL_NAME);
 }
 
-/** True when the installed SKILL.md already matches the bundled one. */
+/** True when the installed skill tree already matches the bundled one. */
 function isCurrent(source: string, target: string): boolean {
   try {
-    return readFileSync(join(target, 'SKILL.md')).equals(readFileSync(join(source, 'SKILL.md')));
+    const bundled = treeSnapshot(source);
+    const installed = treeSnapshot(target);
+    if (bundled.size !== installed.size) {
+      return false;
+    }
+    for (const [relative, bytes] of bundled) {
+      const other = installed.get(relative);
+      if (other === undefined || !other.equals(bytes)) {
+        return false;
+      }
+    }
+    return true;
   } catch {
     // unreadable or partial installs are never "current"
     return false;
   }
+}
+
+/**
+ * Read every regular file under `root` into a `relative path -> bytes` map.
+ *
+ * Directories recurse; symlinks and other irregular entries are skipped, so a
+ * tree containing one never counts as "current" (it is replaced, never
+ * followed). Relative paths use `/` so the map is portable.
+ */
+function treeSnapshot(root: string): Map<string, Buffer> {
+  const files = new Map<string, Buffer>();
+  const walk = (dir: string, prefix: string): void => {
+    const entries = readdirSync(dir, { withFileTypes: true }).sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+    for (const entry of entries) {
+      const relative = prefix === '' ? entry.name : `${prefix}/${entry.name}`;
+      if (entry.isDirectory()) {
+        walk(join(dir, entry.name), relative);
+      } else if (entry.isFile()) {
+        files.set(relative, readFileSync(join(dir, entry.name)));
+      }
+    }
+  };
+  walk(root, '');
+  return files;
 }
 
 export interface InstallOptions {

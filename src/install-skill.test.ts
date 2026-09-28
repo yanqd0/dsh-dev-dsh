@@ -10,7 +10,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
@@ -25,10 +25,15 @@ function tempDir(): string {
 }
 
 /** Build a fake bundled-skill source directory containing one SKILL.md. */
-function makeSource(body = 'body'): string {
+function makeSource(body = 'body', extra: Record<string, string> = {}): string {
   const source = join(tempDir(), 'skill');
   mkdirSync(source, { recursive: true });
   writeFileSync(join(source, 'SKILL.md'), body);
+  for (const [relative, contents] of Object.entries(extra)) {
+    const absolute = join(source, relative);
+    mkdirSync(dirname(absolute), { recursive: true });
+    writeFileSync(absolute, contents);
+  }
   return source;
 }
 
@@ -63,12 +68,42 @@ describe('installSkill', () => {
 
   it('leaves an up-to-date target untouched (no churn)', () => {
     const dshHome = tempDir();
-    const source = makeSource('v1');
+    const source = makeSource('v1', { 'references/a.md': 'a1' });
     installSkill({ dshHome, source });
     const before = statSync(skillTarget(dshHome)).mtimeMs;
 
     expect(installSkill({ dshHome, source })).toEqual({ ok: true });
     expect(statSync(skillTarget(dshHome)).mtimeMs).toBe(before);
+  });
+
+  it('refreshes the target when only a reference file changed', () => {
+    const dshHome = tempDir();
+    installSkill({ dshHome, source: makeSource('v1', { 'references/a.md': 'a1' }) });
+
+    expect(
+      installSkill({ dshHome, source: makeSource('v1', { 'references/a.md': 'a2' }) })
+    ).toEqual({ ok: true });
+    expect(readFileSync(join(skillTarget(dshHome), 'SKILL.md'), 'utf8')).toBe('v1');
+    expect(readFileSync(join(skillTarget(dshHome), 'references/a.md'), 'utf8')).toBe('a2');
+  });
+
+  it('refreshes the target when it is missing a bundled reference file', () => {
+    const dshHome = tempDir();
+    installSkill({ dshHome, source: makeSource('v1') });
+
+    expect(installSkill({ dshHome, source: makeSource('v1', { 'references/a.md': 'a1' }) })).toEqual(
+      { ok: true }
+    );
+    expect(readFileSync(join(skillTarget(dshHome), 'references/a.md'), 'utf8')).toBe('a1');
+  });
+
+  it('refreshes the target when it carries an extra file', () => {
+    const dshHome = tempDir();
+    installSkill({ dshHome, source: makeSource('v1') });
+    writeFileSync(join(skillTarget(dshHome), 'stray.md'), 'stray');
+
+    expect(installSkill({ dshHome, source: makeSource('v1') })).toEqual({ ok: true });
+    expect(existsSync(join(skillTarget(dshHome), 'stray.md'))).toBe(false);
   });
 
   it('replaces a stale target', () => {
