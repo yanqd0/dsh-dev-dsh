@@ -70,6 +70,7 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `README.md`：项目介绍、Status、Layout、Development。
 - `AGENTS.md`（本文件）：项目导航与硬约束。
 - `notes/evaluation.md`：方向评估、决策与版本规划。
+- `notes/runtime-triage.md`：DSH 运行时故障的低成本定位法（诊断流程 + 反模式清单；未来进 skill 分册）。
 - mint plan / issue：计划与进度真源（本仓当前：milestone `0.1.0`；具体 plan 号以 `mint plan list` 为准，不在此处写死）。
 
 ## 不要做
