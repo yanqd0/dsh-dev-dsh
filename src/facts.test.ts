@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -47,7 +47,10 @@ const REFERENCES: Record<string, { dir: string; packageJson: string }> = {
 };
 
 /** Upstream paths the skill is allowed to cite, lifted out of `skill/`. */
-const CITED_PATH_SHAPE = /(?:packages|apps|docs|\.agents)\/[A-Za-z0-9._/-]+/g;
+const CITED_PATH_SHAPE = /(?:packages|apps|docs|\.agents|vendor)\/[A-Za-z0-9._/-]+/g;
+
+/** Files under `skill/references/` named by `SKILL.md`. */
+const REFERENCE_LINK_SHAPE = /references\/[A-Za-z0-9._-]+\.md/g;
 
 interface Fact {
   /** Stable slug of the fact as the skill states it. */
@@ -113,6 +116,209 @@ const facts: Fact[] = [
     path: 'docs/user/develop',
     note: '面向插件作者的官方文档树（basic / framework / practice）',
   },
+  {
+    id: 'bundle-publish-doc',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'docs/user/develop/basic/publish.zh.md',
+    note: 'bundle/profile manifest、层序、peer/dev 三分、git+prepare+allowBuilds 与 tarball 分发',
+  },
+  {
+    id: 'tool-authoring-doc',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'docs/user/develop/basic/tool.zh.md',
+    note: 'ctx.tools.register(defineTool(...)) 的最小可用写法',
+  },
+  {
+    id: 'config-authoring-doc',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'docs/user/develop/basic/config.zh.md',
+    note: 'Config schema 的默认值/必填与校验失败行为',
+  },
+  {
+    id: 'events-authoring-doc',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'docs/user/develop/framework/events.zh.md',
+    note: '事件 mode（emit/bail/serial/waterfall）与 waterfall 必须 next()',
+  },
+  {
+    id: 'plugin-export-forms',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/AGENTS.md',
+    note: 'function plugin 具名导出 name/inject/Config/apply，不可与 default 混用；可选服务用 ctx.get',
+  },
+  {
+    id: 'default-export-postmortem',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'docs/postmortem/0001-acp-default-export-drops-inject.md',
+    note: 'default export 取代命名空间、静默丢掉 inject 的事故记录',
+  },
+  {
+    id: 'bundle-manifest-type',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/util/package-manifest/src/types.ts',
+    line: 69,
+    note: 'DshBundleManifest 唯一必填字段 patch: string | string[]',
+  },
+  {
+    id: 'engines-declarative',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/util/package-manifest/src/types.ts',
+    line: 22,
+    note: 'engines 是声明式字段，当前无 reader 执行',
+  },
+  {
+    id: 'bundle-patch-files',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/boot/app-boot/src/profile.ts',
+    line: 58,
+    note: 'bundlePatchFiles：patch 必须是字符串或字符串数组（否则抛错）',
+  },
+  {
+    id: 'profile-user-layer-last',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/boot/app-boot/src/profile.ts',
+    line: 684,
+    note: 'profile 自身的 cordis.patch.yml 在全部 bundle 层之后作为最后一层',
+  },
+  {
+    id: 'overlay-read-failure',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/boot/app-boot/src/index.ts',
+    line: 340,
+    note: '被引用的 patch 文件读不到时抛 `failed to read overlay`（启动失败，不是警告）',
+  },
+  {
+    id: 'entry-patch-semantics',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'vendor/include/src/index.ts',
+    line: 57,
+    note: 'applyEntryPatches：insert 追加、裸条目按 id 覆盖且整体替换 config、命中失败只 warn',
+  },
+  {
+    id: 'same-id-entry-reuse',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'vendor/loader/src/config/group.ts',
+    line: 20,
+    note: 'EntryGroup.create 同 id 复用同一 entry（last-wins），0.1.7-rc.2 无 duplicate id 抛错',
+  },
+  {
+    id: 'entry-id-generation',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'vendor/loader/src/config/tree.ts',
+    line: 51,
+    note: 'ensureId 只为缺 id 的行生成随机 id',
+  },
+  {
+    id: 'same-id-archived-note',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: '.agents/notes/archived/bug-fix/2026-08-12-fix-pwsh-terminal-overlay-dup.zh.md',
+    line: 52,
+    note: '`duplicate loader entry id` 旧断言的出处（引用 tag 之前的 group.ts:64，现已不成立）',
+  },
+  {
+    id: 'unwrap-exports-default',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'vendor/loader/src/index.ts',
+    line: 201,
+    note: 'unwrapExports 优先 exports.default，混用会整体丢掉具名 inject/Config',
+  },
+  {
+    id: 'config-validation-error',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'vendor/cordis/src/fiber.ts',
+    line: 28,
+    note: 'ValidationError 文本 `invalid config:\\n  - <message> (at <path>)`；校验同步执行',
+  },
+  {
+    id: 'plugin-shape-error',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'vendor/cordis/src/registry.ts',
+    line: 319,
+    note: '非法插件形态抛 `invalid plugin, expect function or object with an "apply" method`',
+  },
+  {
+    id: 'tool-register-contract',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/core/tools/src/index.ts',
+    line: 1063,
+    note: 'ctx.tools.register 返回 disposer；output{schema,render} 必填；run_code 名字保留',
+  },
+  {
+    id: 'define-tool-helper',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/core/tools/src/schema.ts',
+    line: 554,
+    note: 'defineTool 从 parameters 推导并校验 args，生成 JSON Schema',
+  },
+  {
+    id: 'agent-created-event',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/core/agent/src/runtime-types.ts',
+    line: 261,
+    note: "会话开始是 'agent/created'（带 source）；本快照没有 agent/session-start 事件",
+  },
+  {
+    id: 'session-start-source',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/core/agent/src/runtime-types.ts',
+    line: 125,
+    note: "SessionStartSource = 'startup' | 'resume' | 'clear' | 'compact'",
+  },
+  {
+    id: 'bundle-less-dependency-warning',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/boot/plugin-manager/src/operations.ts',
+    line: 102,
+    note: '无 dsh.bundle 的依赖只作普通依赖并打印警告，不成为 profile 层',
+  },
+  {
+    id: 'pnpm-build-blocked',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/boot/plugin-manager/src/install-failure.ts',
+    line: 22,
+    note: 'ERR_PNPM_IGNORED_BUILDS / Ignored build scripts 归类为 build-blocked',
+  },
+  {
+    id: 'allow-builds-placeholder',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/boot/plugin-manager/src/build-approval.ts',
+    line: 27,
+    note: "pnpm 在 allowBuilds 留占位字面量 'set this to true or false' 表示待授权",
+  },
+  {
+    id: 'git-hosted-prepare-hint',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'apps/cli/src/plugin.ts',
+    line: 82,
+    note: 'git 安装需作者 prepare + 用户 allowBuilds；dsh 打印修法',
+  },
+  {
+    id: 'plugin-cli-forwards-pnpm',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'apps/cli/src/args.ts',
+    line: 191,
+    note: 'dsh plugin 把参数原样转发给 pnpm（add/remove/why/list…）',
+  },
+  {
+    id: 'cli-reference',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'apps/cli/reference/README.zh.md',
+    note: 'profile CLI 与层序的权威叙述',
+  },
+  {
+    id: 'peer-compatibility-gate',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/boot/app-boot/src/plugin-compatibility.ts',
+    line: 98,
+    note: '只对 @deepseek-ai/dsh / @deepseek-ai/dsh-* 的 peerDependencies 做兼容门禁并给豁免路径',
+  },
+  {
+    id: 'package-meta-resolution',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/boot/app-boot/src/package-meta.ts',
+    line: 61,
+    note: '元数据经 Node ESM resolver 解析；缺失资源（含 exports 未暴露）静默降级',
+  },
 ];
 
 /** A fact that cannot be re-verified because its reference tree is missing. */
@@ -162,10 +368,39 @@ function assertSafePath(fact: Fact): void {
   expect(escapes, `fact "${fact.id}" path escapes 3rdp/: ${fact.path}`).toBe(false);
 }
 
+/** Every markdown file under `skill/`, as paths relative to `skill/`. */
+function skillMarkdown(): string[] {
+  return readdirSync(SKILL_DIR, { recursive: true, encoding: 'utf8' })
+    .filter((entry) => entry.endsWith('.md'))
+    .sort();
+}
+
 /** Every upstream path cited anywhere under `skill/`. */
 function citedPaths(): string[] {
+  const cited = new Set<string>();
+  for (const relative of skillMarkdown()) {
+    const text = readFileSync(join(SKILL_DIR, relative), 'utf8');
+    for (const match of text.matchAll(CITED_PATH_SHAPE)) {
+      cited.add(match[0].replace(/:\d+(?:-\d+)?$/, '').replace(/\/$/, ''));
+    }
+  }
+  return [...cited].sort();
+}
+
+/** Reference files the SKILL.md index names. */
+function referencedFiles(): string[] {
   const text = readFileSync(join(SKILL_DIR, 'SKILL.md'), 'utf8');
-  return (text.match(CITED_PATH_SHAPE) ?? []).map((cited) => cited.replace(/:\d+(?:-\d+)?$/, ''));
+  return [...new Set(text.match(REFERENCE_LINK_SHAPE) ?? [])].sort();
+}
+
+/** Reference files that actually exist under `skill/references/`. */
+function referenceFiles(): string[] {
+  const dir = join(SKILL_DIR, 'references');
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, { encoding: 'utf8' })
+    .filter((entry) => entry.endsWith('.md'))
+    .map((entry) => `references/${entry}`)
+    .sort();
 }
 
 describe('fact ledger metadata', () => {
@@ -204,6 +439,12 @@ describe('fact ledger metadata', () => {
       uncovered,
       'skill cites upstream paths that are missing from the fact ledger (add a fact for each)'
     ).toEqual([]);
+  });
+
+  it('keeps the reference index and the reference files in step', () => {
+    // A reference that exists but is not indexed is unreachable; one that is
+    // indexed but missing is a dead link. Both fail here rather than at read time.
+    expect(referencedFiles()).toEqual(referenceFiles());
   });
 });
 
