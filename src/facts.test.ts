@@ -75,6 +75,19 @@ const ENTRY_PAGE = 'SKILL.md';
 /** A page/directory name segment must be lowercase kebab-case. */
 const PAGE_SEGMENT_SHAPE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
+/** A `<repo>@<tag>` pin as it appears in skill prose. */
+const PIN_IN_PROSE_SHAPE = /[a-z0-9][a-z0-9._-]*@[a-z0-9][A-Za-z0-9._-]*/g;
+
+/** A version literal — whatever it belongs to. */
+const SEMVER_SHAPE = /\d+\.\d+\.\d+/;
+
+/** A `<repo>@<tag>` pin whose tag looks like a version. */
+const VERSION_PIN_SHAPE = /\b[a-z0-9][a-z0-9._-]*@(?:dsh-)?v?\d/;
+
+/** The fixed placeholder marker; a placeholder must name the plan filling it. */
+const PLACEHOLDER_MARKER = '占位｜归属：';
+const PLACEHOLDER_PLAN_SHAPE = /plan #\d+/;
+
 interface Fact {
   /** Stable slug of the fact as the skill states it. */
   id: string;
@@ -870,6 +883,40 @@ describe('fact ledger metadata', () => {
   it('names every page and directory in lowercase kebab-case', () => {
     const pages = skillPages();
     expect(badNames(pages, skillDirs(pages))).toEqual([]);
+  });
+
+  it('keeps SKILL.md free of version-bound content', () => {
+    // L0 is the one page that must survive a dsh major version untouched:
+    // upstream paths, version literals and `<repo>@<tag>` pins all belong to
+    // the pages below it (see notes/skill-design.md §2).
+    const text = readFileSync(join(SKILL_DIR, ENTRY_PAGE), 'utf8');
+    expect(text.match(CITED_PATH_SHAPE) ?? [], 'SKILL.md cites upstream paths').toEqual([]);
+    expect(text.match(SEMVER_SHAPE), 'SKILL.md carries a version literal').toBeNull();
+    expect(text.match(VERSION_PIN_SHAPE), 'SKILL.md carries a <repo>@<tag> pin').toBeNull();
+  });
+
+  it('pins every content page to a reference revision', () => {
+    // Index pages are navigation and carry no facts, so they need no pin.
+    const unpinned = skillPages()
+      .filter((page) => page.startsWith('references/') && !page.endsWith('/index.md'))
+      .filter((page) => {
+        const text = readFileSync(join(SKILL_DIR, page), 'utf8');
+        return (text.match(PIN_IN_PROSE_SHAPE) ?? []).length === 0;
+      });
+    expect(unpinned, 'content pages without a <repo>@<tag> pin').toEqual([]);
+  });
+
+  it('makes every placeholder name the plan that fills it', () => {
+    const offenders: string[] = [];
+    for (const page of skillPages()) {
+      const lines = readFileSync(join(SKILL_DIR, page), 'utf8').split('\n');
+      for (const [index, line] of lines.entries()) {
+        if (line.includes(PLACEHOLDER_MARKER) && !PLACEHOLDER_PLAN_SHAPE.test(line)) {
+          offenders.push(`${page}:${index + 1}`);
+        }
+      }
+    }
+    expect(offenders, 'placeholder markers without "plan #<id>"').toEqual([]);
   });
 });
 
