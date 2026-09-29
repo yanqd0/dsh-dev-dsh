@@ -23,6 +23,11 @@ pnpm 10+ 默认拦截依赖的 install/build 脚本，未 allowlist 的脚本是
 - pnpm 会在 `<profileDir>/pnpm-workspace.yaml` 的 `allowBuilds` 下留一个占位字面量
   `set this to true or false`；把它改成 `true` 即放行（`packages/boot/plugin-manager/src/build-approval.ts:27`）。
   该文件必须是 YAML 映射，且 `allowBuilds` 不能用锚点/别名。
+- dsh 的放行流程是「写 `true` **并重跑安装脚本**」（`plugin_manager` 的 `installBundle` 在装包前
+  先 `approveBuilds`，`packages/boot/plugin-manager/src/index.ts:474`）。**手工**只把占位符改成
+  `true`、再对**已装好**的包跑一次 `dsh plugin add`，实测**不会**重跑安装脚本（pnpm 判依赖已存在，
+  跳过构建步骤）⟹ 依赖构建脚本的副作用（如 postinstall 落位数据）不会发生。
+  可复现的补跑方式是经 dsh 的放行流程，或 `dsh plugin --profile <p> remove <pkg>` 后再 `add`。
 - git 安装时 dsh 直接给出修法：`dsh: git-hosted plugins build on install via their prepare
 script, which pnpm blocks until allowed — add the exact key pnpm printed above under
 allowBuilds in <profileDir>/pnpm-workspace.yaml, then re-run`

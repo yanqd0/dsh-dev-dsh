@@ -9,3 +9,7 @@ now.md
 notes/dsh-old
 # Local-only read-only diagnostic probes; machine-specific scratch, not project content.
 probe/
+# Local-only acceptance scratch: isolated DSH_HOME + pack tarball.
+.tmp-accept
+*.tgz
+.pnpm-store

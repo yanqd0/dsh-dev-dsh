@@ -40,8 +40,8 @@ whenToUse: 需要仓外开发一个可发布的 DSH 插件，或排查其挂载 
 - 需要与宿主共享实例的 dsh 包同时进 `peerDependencies` 与 `devDependencies`；
   独立版本的第三方依赖与无状态工具包进 `dependencies`。
 - `engines` 是声明式字段，当前没有 reader —— 别把它当兼容性保证。
-- 不要手改 profile 目录（`package.json` / `cordis.patch.yml`）：`dsh plugin` 与 `plugin_manager`
-  会维护 `dsh.profile.bundles`。
+- 不要手改 profile 目录（`package.json` / `cordis.patch.yml`）：`dsh.profile.bundles` 由 dsh 的
+  `plugin_manager` 与安装后的 reconcile 维护（`dsh plugin add` 只是 pnpm 透传，装成功后才追加该包）。
 
 细节与失败串：`references/mounting-and-manifest.md`。
 
@@ -105,10 +105,13 @@ pnpm ≥10 默认拦截构建脚本（`ERR_PNPM_IGNORED_BUILDS`），pending 项
 
 ```sh
 pnpm pack --dry-run                      # 产物里真有入口与 patch
-dsh plugin --profile <p> add <pkg>       # 安装并写入 dsh.profile.bundles
+dsh plugin --profile <p> add <pkg>       # 装包；成功后 dsh 才把它追加进 dsh.profile.bundles
 dsh --profile <p> --dump-config          # 确认自己那一层存在
 ```
 
+- `add` 会跑 `pnpm`：构建脚本未放行时它**失败且不写 bundles**（`ERR_PNPM_IGNORED_BUILDS`），
+  依赖已在 `node_modules` 里时再跑一次 `add` 也不会补写——用 `remove` 再 `add` 重试，
+  或走 `plugin_manager` 的放行（`references/mounting-and-manifest.md` §5.1）。
 - 装完通常需要重启 profile 才加载新 JS 模块；不要用日志或进程列表代替上述检查。
 - 只在**真实消费方仓库**上验收，而不是只跑单测。
 

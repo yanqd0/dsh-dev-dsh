@@ -31,13 +31,13 @@
 
 ## 三、四层观测手段（可复制）
 
-| 层 | 要看什么 | 手段 |
-| --- | --- | --- |
-| 宿主进程 | 启动告警、插件激活失败 | 启动日志（本机：`~/scripts/dsh/dsh.log`，`run.sh` 用 `>>LOG 2>&1`）；关键串 `entries did not activate` / `skipping profile bundle` |
-| 宿主图谱 | 实际挂载了哪些 row | `dsh --profile <p> --dump-config`（会重写 profile 的 `cordis.yml`，沙箱下要提权）；无权限时按 `package.json` 的 `dsh.profile.bundles` + 各 bundle 的 `cordis.patch.yml` 静态推算 |
-| 客户端图谱 | 浏览器"将要加载什么" | 带 cookie GET `/`，解析 `globalThis["__DSH_BOOT__"]`；或连 SSE `/plugins/events`（连上即发一帧 `{"type":"graph"}`） |
-| 客户端产物 | 下发内容与磁盘是否同源 | 拉 `plugins/??<id>/client.js&rev=<rev>` 与安装目录 `diff`（忽略 `sourceMappingURL`） |
-| 传输 | 反代 / 鉴权 / 长连接 | token 换 cookie 后 GET `/` 应 200；`remote.mux` WebSocket 直连 vs 经反代各开一条比稳定性（`ws` 包在 dsh 安装树内，可用 `createRequire` 加载） |
+| 层           | 要看什么               | 手段                                                                                                                                                                             |
+| ------------ | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 宿主进程     | 启动告警、插件激活失败 | 启动日志（本机：`~/scripts/dsh/dsh.log`，`run.sh` 用 `>>LOG 2>&1`）；关键串 `entries did not activate` / `skipping profile bundle`                                               |
+| 宿主图谱     | 实际挂载了哪些 row     | `dsh --profile <p> --dump-config`（会重写 profile 的 `cordis.yml`，沙箱下要提权）；无权限时按 `package.json` 的 `dsh.profile.bundles` + 各 bundle 的 `cordis.patch.yml` 静态推算 |
+| 客户端图谱   | 浏览器"将要加载什么"   | 带 cookie GET `/`，解析 `globalThis["__DSH_BOOT__"]`；或连 SSE `/plugins/events`（连上即发一帧 `{"type":"graph"}`）                                                              |
+| 客户端产物   | 下发内容与磁盘是否同源 | 拉 `plugins/??<id>/client.js&rev=<rev>` 与安装目录 `diff`（忽略 `sourceMappingURL`）                                                                                             |
+| 传输         | 反代 / 鉴权 / 长连接   | token 换 cookie 后 GET `/` 应 200；`remote.mux` WebSocket 直连 vs 经反代各开一条比稳定性（`ws` 包在 dsh 安装树内，可用 `createRequire` 加载）                                    |
 | 页面持久状态 | 侧边栏布局等仅存浏览器 | 只能请用户取：`localStorage` 的 `dsh.sidebar-right.v1.<sessionId>`（本次唯一缺口）                                                                                               |
 
 ## 四、反模式清单（本次踩过的坑）

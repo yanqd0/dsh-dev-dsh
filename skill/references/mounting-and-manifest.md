@@ -10,8 +10,9 @@
 - **bundle**：npm 包 + 配置层，声明 `dsh.bundle`。唯一必填字段是 `patch`，类型
   `string | string[]`（`packages/util/package-manifest/src/types.ts:69`）。
 - **profile**：`$DSH_HOME/profiles/<name>/` 下的目录，声明 `dsh.profile.bundles`（有序包名数组）。
-  它由 `dsh plugin` 维护，**不要手写**。
-- 没有 `dsh.bundle` 的包仍可安装，但只算普通依赖，`dsh plugin` 会打印
+  它由 dsh 的 `plugin_manager` 与安装后的 reconcile 维护，**不要手写**——`dsh plugin add` 只是
+  pnpm 透传，见 §5。
+- 没有 `dsh.bundle` 的包仍可安装，但只算普通依赖，dsh 会打印
   `dsh: warning: <name> declares no dsh.bundle — installed as a plain dependency, not a profile layer`
   并跳过它（`packages/boot/plugin-manager/src/operations.ts:102`）。
 
@@ -70,7 +71,7 @@
 
 ```sh
 dsh --profile <p> --dump-config          # 看 "# == <你的包名>" 层是否存在
-dsh plugin --profile <p> add <pkg>       # 装包并把它追加进 dsh.profile.bundles
+dsh plugin --profile <p> add <pkg>       # 装包；成功后由 dsh 追加进 dsh.profile.bundles
 dsh plugin --profile <p> remove <pkg>    # 依赖与层一起移除
 ```
 
@@ -78,6 +79,23 @@ dsh plugin --profile <p> remove <pkg>    # 依赖与层一起移除
 只拦截 `allow-version` / `revoke-version` / `version-exemptions`；没有 `dsh plugin list`，
 也没有 `dsh profiles`（`apps/cli/src/args.ts:191`、`apps/cli/src/plugin.ts`）。
 两处命令与层序的权威叙述在 `apps/cli/reference/README.zh.md`。
+
+### 5.1 `add` 什么时候才真的写进 `dsh.profile.bundles`
+
+`add` 本身不碰 bundles。**安装成功**之后 dsh 才做 reconcile：遍历 profile 里「**第一次出现**的依赖」，
+声明了 `dsh.bundle` 的追加进 bundles 并加载其 patch
+（`packages/boot/plugin-manager/src/operations.ts:242`、`:255`）。由此三个可观测行为：
+
+- `pnpm add` 退出码非 0（最典型是 `ERR_PNPM_IGNORED_BUILDS`）⟹ 不追加、不加载 patch。
+  先按 `build-and-pitfalls.md` §2 放行构建脚本，再重装。
+- reconcile 只看**新**依赖。依赖已在 `node_modules` 里时，再跑一次 `add` 不会重试这一步；
+  用 `dsh plugin --profile <p> remove <pkg>` 再 `add` 才是可复现的重试路径。
+- 层内的 entry **id 落定在 boot**：`add` 阶段 profile 目录还没有 `cordis.yml`，
+  要看实际挂载的 id 与 `config`，用 `--dump-config`，不要看 `add` 的输出。
+
+> 实测（dsh `0.2.0-rc.1`，干净 profile）：未放行构建脚本时 `add` 退出码 1、bundles 不变；
+> 放行后 `remove` + `add` 退出码 0、bundles 追加该包，`--dump-config` 出现
+> `id: dsh-dev-dsh` / `name: '@yanqd0/dsh-dev-dsh'` / `config: {}`，0 条 patch 警告。
 
 ## 6. 清单字段中真正被读的那些
 

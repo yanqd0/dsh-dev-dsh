@@ -282,6 +282,22 @@ const facts: Fact[] = [
     note: '无 dsh.bundle 的依赖只作普通依赖并打印警告，不成为 profile 层',
   },
   {
+    id: 'bundle-reconcile-new-deps',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/boot/plugin-manager/src/operations.ts',
+    line: 255,
+    note:
+      'profile 依赖 reconcile：只对 profile 里首次出现的依赖追加 bundles 并加载 patch ' +
+      '⟹ 安装失败（如 ERR_PNPM_IGNORED_BUILDS）不写 bundles，重跑 add 也不会补，须 remove 后重装',
+  },
+  {
+    id: 'build-approval-retries-install',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/boot/plugin-manager/src/index.ts',
+    line: 474,
+    note: 'installBundle 在装包前先 approveBuilds 写 allowBuilds=true 并重跑安装脚本',
+  },
+  {
     id: 'pnpm-build-blocked',
     source: 'deepseek-harness@dsh-v0.1.7-rc.2',
     path: 'packages/boot/plugin-manager/src/install-failure.ts',
