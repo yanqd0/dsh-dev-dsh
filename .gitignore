@@ -7,3 +7,5 @@ coverage
 now.md
 # Local-only symlink to a sibling checkout; dangling for anyone else.
 notes/dsh-old
+# Local-only read-only diagnostic probes; machine-specific scratch, not project content.
+probe/
