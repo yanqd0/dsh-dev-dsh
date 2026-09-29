@@ -4,5 +4,6 @@ lib
 dist
 coverage
 *.log
+now.md
 # Local-only symlink to a sibling checkout; dangling for anyone else.
 notes/dsh-old
