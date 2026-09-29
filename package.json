@@ -1,9 +1,17 @@
 {
   "name": "@yanqd0/dsh-dev-dsh",
   "version": "0.1.0-alpha.1",
-  "description": "A dsh plugin for developing dsh plugins: ships the out-of-tree authoring method as a skill that installs with the plugin",
+  "description": "dsh plugin for developing dsh plugins: ships the out-of-tree authoring method as a skill that installs with the plugin",
   "type": "module",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yanqd0/dsh-dev-dsh.git"
+  },
+  "homepage": "https://github.com/yanqd0/dsh-dev-dsh#readme",
+  "bugs": {
+    "url": "https://github.com/yanqd0/dsh-dev-dsh/issues"
+  },
   "engines": {
     "node": ">=22.19"
   },
@@ -11,6 +19,7 @@
     "dsh",
     "dsh-plugin",
     "deepseek-harness",
+    "out-of-tree",
     "skill"
   ],
   "exports": {
