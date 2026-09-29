@@ -1,6 +1,6 @@
 # 挂载与清单：patch 语义、层序、包清单字段
 
-本文是 `SKILL.md` 的分册，回答「仓外插件怎么被挂上去、清单哪些字段真正起作用」。
+本文是 `references/develop/index.md` 的子页，回答「仓外插件怎么被挂上去、清单哪些字段真正起作用」。
 每条结论后括号内是快照 `deepseek-harness@dsh-v0.1.7-rc.2` 里的出处；行号随版本漂移，
 `src/facts.test.ts` 会在 `3rdp/` 存在时逐条复核。官方完整叙述见
 `docs/user/develop/basic/publish.zh.md`，本文只补它没写透的失败面。

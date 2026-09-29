@@ -1,6 +1,6 @@
 # 客户端运行时取证：在浏览器 Console 里读活状态
 
-本文是 `SKILL.md` 的分册，回答「浏览器端行为不对时，怎么不靠 devtools 断点、不重编译、
+本文是 `references/dogfood/index.md` 的子页，回答「浏览器端行为不对时，怎么不靠 devtools 断点、不重编译、
 不手改安装树，就把**运行中的真实状态**读出来」。方法在做一次客户端 bug 定位时定型；
 那次的完整案例见仓外 `notes/resource-preview-protocol-bug.md`。
 

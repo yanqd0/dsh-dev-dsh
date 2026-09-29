@@ -1,6 +1,6 @@
 # 构建、发布与踩坑：仓外仓库的工程面
 
-本文是 `SKILL.md` 的分册，回答「仓外插件仓库怎么构建、怎么发布、报错怎么归因」。
+本文是 `references/develop/index.md` 的子页，回答「仓外插件仓库怎么构建、怎么发布、报错怎么归因」。
 出处在快照 `deepseek-harness@dsh-v0.1.7-rc.2`；行号由 `src/facts.test.ts` 复核。
 
 ## 1. 模块形态

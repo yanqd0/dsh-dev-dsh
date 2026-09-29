@@ -22,12 +22,13 @@ import { afterAll, describe, expect, it } from 'vitest';
  * reported as one concrete entry instead of surfacing as wrong guidance to a
  * user months later.
  *
- * The ledger is *versioned metadata*: the pin (`deepseek-harness@dsh-v0.1.7-rc.2`)
- * is meaningful even where the checkout is absent, and the metadata assertions
- * below always run. Re-verification is best-effort: the `3rdp/` reference tree
- * is a local, gitignored development convenience that does not ship, does not
- * exist in test/production (user installs), and whose absence must never break
- * the build, install, or test suite.
+ * The ledger is *versioned metadata*: each fact carries the revision it came
+ * from, and several revisions coexist on purpose (the current content plane
+ * plus history pages). The metadata assertions below always run; re-verification
+ * is per-revision and best-effort — the `3rdp/` reference tree is a local,
+ * gitignored development convenience that does not ship, does not exist in
+ * test/production (user installs), and whose absence must never break the
+ * build, install, or test suite.
  *
  * Both halves of the skill ↔ ledger contract are enforced here:
  *
@@ -366,6 +367,171 @@ const facts: Fact[] = [
     path: 'packages/boot/app-boot/src/package-meta.ts',
     line: 61,
     note: '元数据经 Node ESM resolver 解析；缺失资源（含 exports 未暴露）静默降级',
+  },
+
+  // dsh 0.2.0-rc.1：`skill/references/dsh/architecture.md` 的架构主干指针。
+  // 本机 checkout 停在 0.1.7-rc.2，所以这批 fact 复核时按版本跳过（见下方 census）。
+  {
+    id: 'dsh-architecture-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'docs/architecture.zh.md',
+    note: '架构主干的上游权威叙述：Cordis、profile 与组合包、核心包表、事件、轮次流程、会话日志',
+  },
+  {
+    id: 'dsh-subsystems-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'docs/subsystems',
+    note: '子系统逐页参考（外部词汇与接线），模块页的首选上游对照',
+  },
+  {
+    id: 'dsh-cordis-primer',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'docs/cordis-primer.zh.md',
+    note: '"一切皆插件" 的框架前提：Cordis 入门',
+  },
+  {
+    id: 'dsh-agent-lifecycle-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'docs/agent-lifecycle.zh.md',
+    note: 'Agent 生命周期时序图（轮次/步骤主干的可视化对照）',
+  },
+  {
+    id: 'dsh-tool-pipeline-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'docs/tool-execution-pipeline.zh.md',
+    note: '工具执行流水线（pre-execute/execute/post-execute 的水位与语义）',
+  },
+  {
+    id: 'dsh-event-map-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'docs/event-producer-consumer.zh.md',
+    note: '事件生产方/消费方映射，事件三域的权威清单',
+  },
+  {
+    id: 'cordis-framework',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'vendor/cordis',
+    note: 'Cordis 框架：插件、服务、类型化事件与可逆副作用',
+  },
+  {
+    id: 'cordis-loader',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'vendor/loader',
+    note: '加载器：条目树与插件加载/卸载',
+  },
+  {
+    id: 'cordis-include',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'vendor/include',
+    note: 'patch（include）语义：按 id 覆盖或插入条目',
+  },
+  {
+    id: 'core-agent',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/core/agent',
+    note: 'Agent 接口、活跃 agent 注册表与 agent/* 事件（ctx.agents）',
+  },
+  {
+    id: 'core-agent-loop',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/core/agent-loop',
+    note: '默认 agent 驱动器（ctx.agentLoop）：轮次/步骤、请求构建、取消与 teardown 顺序',
+  },
+  {
+    id: 'core-tools',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/core/tools',
+    note: '作用域化工具注册表与带把关的执行流水线（ctx.tools）',
+  },
+  {
+    id: 'core-session',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/core/session',
+    note: '仅追加会话日志与 deriveMessages() 模型历史投影（ctx.sessions）',
+  },
+  {
+    id: 'core-system-prompt',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/core/system-prompt',
+    note: '提示词片段与工具 schema 的组装（ctx.systemPrompt）',
+  },
+  {
+    id: 'llm-package',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/llm/llm',
+    note: '消息与流式词汇表、适配器 seam（ctx.llm）',
+  },
+  {
+    id: 'boot-app-boot',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/boot/app-boot',
+    note: 'profile 与组合包的叠加启动',
+  },
+  {
+    id: 'boot-plugin-manager',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/boot/plugin-manager',
+    note: '插件安装与 reconcile（dsh plugin … 的宿主侧）',
+  },
+  {
+    id: 'bundle-base',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/bundle/base',
+    note: 'web/headless/sdk/acp profile 的共享第一层（含 plugin-manager）',
+  },
+  {
+    id: 'cli-launcher',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'apps/cli',
+    note: 'launcher 与 profile CLI（dsh --profile …）',
+  },
+  {
+    id: 'client-ui-group',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/client',
+    note: '客户端 UI 插件组（ui-*）与 web 应用',
+  },
+  {
+    id: 'client-web',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/client/web',
+    note: '浏览器 web 客户端',
+  },
+  {
+    id: 'preset-agent-preset',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/preset/agent-preset',
+    note: 'agent 组合预设（官方 creator skill 的宿主）',
+  },
+  {
+    id: 'skill-packages',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/skill',
+    note: 'skill 子系统：发现优先级、目录注入与按需加载',
+  },
+  {
+    id: 'mcp-packages',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/mcp',
+    note: 'MCP：外部工具与资源接入',
+  },
+  {
+    id: 'hooks-packages',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/hooks',
+    note: 'Claude Code / Codex 桥接',
+  },
+  {
+    id: 'jobs-packages',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/jobs',
+    note: '后台任务运行时',
+  },
+  {
+    id: 'extensions-host-runner',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.1',
+    path: 'packages/extensions/cordis-host-runner',
+    note: '运行时自扩展：动态 Cordis 插件的 Host 侧执行',
   },
 ];
 
