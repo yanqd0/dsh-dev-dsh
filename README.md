@@ -33,7 +33,8 @@ publishes. The reasoning and the evidence behind the scope are in
 line until 0.1.0 is released.
 
 Development is planned in two milestone lines; the live plan is tracked with
-the `mint` tool in this project.
+the `mint` tool in this project. The release mechanics are in
+[Publishing](#publishing).
 
 **0.1.0 — a dsh 0.1.7 skill that ships with its plugin**
 
