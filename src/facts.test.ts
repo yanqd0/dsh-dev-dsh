@@ -1,8 +1,17 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative } from 'node:path';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it } from 'vitest';
 
 /**
  * Fact ledger for the dsh facts hardened into `skill/SKILL.md`.
@@ -24,6 +33,13 @@ import { describe, expect, it } from 'vitest';
  *
  * - Every upstream path cited by `skill/` must be a fact in this ledger.
  * - Every fact must name a known reference and a versioned revision.
+ *
+ * It also enforces the skill's in-tree contract (see `notes/skill-design.md`):
+ * `SKILL.md` indexes every entry page and nothing else, every directory index
+ * names the pages it owns, every page is reachable from `SKILL.md`, no in-skill
+ * link dangles, every page names the index that owns it, and every name is
+ * lowercase kebab-case. The structure is a graph on purpose — cross-category
+ * references may form cycles.
  */
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -49,8 +65,14 @@ const REFERENCES: Record<string, { dir: string; packageJson: string }> = {
 /** Upstream paths the skill is allowed to cite, lifted out of `skill/`. */
 const CITED_PATH_SHAPE = /(?:packages|apps|docs|\.agents|vendor)\/[A-Za-z0-9._/-]+/g;
 
-/** Files under `skill/references/` named by `SKILL.md`. */
-const REFERENCE_LINK_SHAPE = /references\/[A-Za-z0-9._-]+\.md/g;
+/** In-skill links: skill/-relative paths under `references/`. */
+const REFERENCE_LINK_SHAPE = /references\/[A-Za-z0-9._/-]+\.md/g;
+
+/** The L0 entry page, relative to `skill/`. */
+const ENTRY_PAGE = 'SKILL.md';
+
+/** A page/directory name segment must be lowercase kebab-case. */
+const PAGE_SEGMENT_SHAPE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 interface Fact {
   /** Stable slug of the fact as the skill states it. */
@@ -355,23 +377,79 @@ interface PendingFact {
 }
 
 /**
- * Split the ledger by whether its reference checkout exists under
- * `referenceRoot`. Re-verification is only possible for the available half;
- * the pending half is the expected, unremarkable state everywhere but a local
- * development checkout.
+ * How much of the ledger the local checkout can actually re-verify.
+ *
+ * A checkout carries exactly one dsh revision, but the ledger deliberately
+ * pins several (current content plus history pages). So re-verification is
+ * per-revision: facts pinned to the checkout's own revision are checked,
+ * facts pinned to another revision are skipped — never failures. Authoring
+ * and reviewing those history pages is a manual discipline (see
+ * `notes/skill-design.md` §6); the alternative, several checkouts side by
+ * side, is explicitly out of scope.
  */
-function referenceCandidates(referenceRoot: string = R3P_DIR): {
+interface ReferenceCensus {
+  /** Checkout present and pinned to the same revision — checked for real. */
   available: Fact[];
+  /** No checkout for that repo at all (the normal case outside development). */
   pending: PendingFact[];
-} {
-  const available: Fact[] = [];
-  const pending: PendingFact[] = [];
+  /** Checkout present, but this fact is pinned to another revision. */
+  unverifiable: Fact[];
+}
+
+/** Split the ledger by what the checkout under `referenceRoot` can verify. */
+function referenceCensus(referenceRoot: string = R3P_DIR): ReferenceCensus {
+  const census: ReferenceCensus = { available: [], pending: [], unverifiable: [] };
   for (const fact of facts) {
     const reference = REFERENCES[repoOf(fact.source)];
-    const exists = reference !== undefined && existsSync(join(referenceRoot, reference.dir));
-    (exists ? available : pending).push(fact);
+    if (reference === undefined) {
+      census.pending.push(fact);
+      continue;
+    }
+    const dir = join(referenceRoot, reference.dir);
+    const packageJson = join(dir, reference.packageJson);
+    if (!existsSync(packageJson)) {
+      census.pending.push(fact);
+      continue;
+    }
+    const declared = (JSON.parse(readFileSync(packageJson, 'utf8')) as { version?: string })
+      .version;
+    if (declared === versionFromTag(fact.source)) {
+      census.available.push(fact);
+    } else {
+      census.unverifiable.push(fact);
+    }
   }
-  return { available, pending };
+  return census;
+}
+
+/** Throwaway checkouts for the revision-matching tests. */
+const tempCheckouts: string[] = [];
+
+/** A fake checkout root whose `deepseek-harness` copy declares `version`. */
+function fakeReferenceRoot(version: string): string {
+  const root = mkdtempSync(join(tmpdir(), 'dsh-facts-test-'));
+  tempCheckouts.push(root);
+  const dir = join(root, 'deepseek-harness');
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ version }));
+  return root;
+}
+
+afterAll(() => {
+  for (const root of tempCheckouts.splice(0)) rmSync(root, { recursive: true, force: true });
+});
+
+/** Every ledger revision, sorted. */
+function pinnedVersions(): string[] {
+  return [...new Set(facts.map((fact) => versionFromTag(fact.source)))].sort();
+}
+
+/** Ids of the facts pinned to `version`. */
+function idsPinnedTo(version: string): string[] {
+  return facts
+    .filter((fact) => versionFromTag(fact.source) === version)
+    .map((fact) => fact.id)
+    .sort();
 }
 
 function repoOf(source: string): string {
@@ -394,18 +472,36 @@ function assertSafePath(fact: Fact): void {
   expect(escapes, `fact "${fact.id}" path escapes 3rdp/: ${fact.path}`).toBe(false);
 }
 
-/** Every markdown file under `skill/`, as paths relative to `skill/`. */
-function skillMarkdown(): string[] {
+/**
+ * Every markdown page under `skill/`, as `/`-joined paths relative to `skill/`
+ * (e.g. `SKILL.md`, `references/dsh/index.md`).
+ */
+function skillPages(): string[] {
   return readdirSync(SKILL_DIR, { recursive: true, encoding: 'utf8' })
     .filter((entry) => entry.endsWith('.md'))
+    .map((entry) => entry.split(sep).join('/'))
     .sort();
+}
+
+/** Every directory under `skill/`, `/`-joined and relative to `skill/`. */
+function skillDirs(pages: string[]): string[] {
+  const dirs = new Set<string>();
+  for (const page of pages) {
+    const parts = page.split('/');
+    parts.pop();
+    while (parts.length > 0) {
+      dirs.add(parts.join('/'));
+      parts.pop();
+    }
+  }
+  return [...dirs].sort();
 }
 
 /** Every upstream path cited anywhere under `skill/`. */
 function citedPaths(): string[] {
   const cited = new Set<string>();
-  for (const relative of skillMarkdown()) {
-    const text = readFileSync(join(SKILL_DIR, relative), 'utf8');
+  for (const page of skillPages()) {
+    const text = readFileSync(join(SKILL_DIR, page), 'utf8');
     for (const match of text.matchAll(CITED_PATH_SHAPE)) {
       cited.add(match[0].replace(/:\d+(?:-\d+)?$/, '').replace(/\/$/, ''));
     }
@@ -413,20 +509,117 @@ function citedPaths(): string[] {
   return [...cited].sort();
 }
 
-/** Reference files the SKILL.md index names. */
-function referencedFiles(): string[] {
-  const text = readFileSync(join(SKILL_DIR, 'SKILL.md'), 'utf8');
+/** In-skill links on a page, as `/`-joined paths relative to `skill/`. */
+function linksOn(page: string): string[] {
+  const text = readFileSync(join(SKILL_DIR, page), 'utf8');
   return [...new Set(text.match(REFERENCE_LINK_SHAPE) ?? [])].sort();
 }
 
-/** Reference files that actually exist under `skill/references/`. */
-function referenceFiles(): string[] {
-  const dir = join(SKILL_DIR, 'references');
-  if (!existsSync(dir)) return [];
-  return readdirSync(dir, { encoding: 'utf8' })
-    .filter((entry) => entry.endsWith('.md'))
-    .map((entry) => `references/${entry}`)
+/**
+ * The pages `SKILL.md` must name — and name only: every top-level
+ * `references/*.md` plus every 大类 index (`references/<dir>/index.md`).
+ * Deeper pages hang off their own directory index, so adding one never edits L0.
+ */
+function entryPages(pages: string[]): string[] {
+  return pages
+    .filter((page) => {
+      const parts = page.split('/');
+      if (page === ENTRY_PAGE || parts[0] !== 'references') return false;
+      return parts.length === 2 || (parts.length === 3 && parts[2] === 'index.md');
+    })
     .sort();
+}
+
+/** Parent of a `/`-joined directory path (`''` for `references/`). */
+function dirnameOf(dir: string): string {
+  const parts = dir.split('/');
+  parts.pop();
+  return parts.join('/');
+}
+
+/** The index page of a directory; the root of `skill/` is `SKILL.md`. */
+function dirIndex(dir: string): string {
+  return dir === '' ? ENTRY_PAGE : `${dir}/index.md`;
+}
+
+/** The pages and child indexes a directory's `index.md` must name. */
+function dirMembers(dir: string, pages: string[]): string[] {
+  const prefix = `${dir}/`;
+  const pagesHere = pages.filter((page) => {
+    if (page === dirIndex(dir) || !page.startsWith(prefix)) return false;
+    return !page.slice(prefix.length).includes('/');
+  });
+  const childIndexes = skillDirs(pages)
+    .filter((child) => child !== dir && dirnameOf(child) === dir)
+    .map(dirIndex);
+  return [...pagesHere, ...childIndexes].sort();
+}
+
+/**
+ * The index page a page must link back to: a content page points at its own
+ * directory index, an index page at the index one level up, and the top-level
+ * 大类 indexes back at `SKILL.md`.
+ */
+function parentIndex(page: string): string {
+  const parts = page.split('/');
+  const name = parts.pop();
+  if (parts.length === 0 || name === undefined) return '';
+  if (name === 'index.md') {
+    parts.pop();
+    return parts.length <= 1 ? ENTRY_PAGE : `${parts.join('/')}/index.md`;
+  }
+  return parts.length === 1 && parts[0] === 'references'
+    ? ENTRY_PAGE
+    : `${parts.join('/')}/index.md`;
+}
+
+/** `page -> link` pairs whose target does not exist. */
+function deadLinks(pages: string[]): string[] {
+  const known = new Set(pages);
+  const dead: string[] = [];
+  for (const page of pages) {
+    for (const link of linksOn(page)) {
+      if (!known.has(link)) dead.push(`${page} -> ${link}`);
+    }
+  }
+  return dead.sort();
+}
+
+/** Pages reachable from `SKILL.md` by following in-skill links (cycles ok). */
+function reachablePages(pages: string[]): Set<string> {
+  const known = new Set(pages);
+  const seen = new Set<string>([ENTRY_PAGE]);
+  const queue = [ENTRY_PAGE];
+  while (queue.length > 0) {
+    const page = queue.pop();
+    if (page === undefined) continue;
+    for (const link of linksOn(page)) {
+      if (known.has(link) && !seen.has(link)) {
+        seen.add(link);
+        queue.push(link);
+      }
+    }
+  }
+  return seen;
+}
+
+/** Paths whose segments break the lowercase kebab-case contract. */
+function badNames(pages: string[], dirs: string[]): string[] {
+  const bad = new Set<string>();
+  for (const dir of dirs) {
+    for (const segment of dir.split('/')) {
+      if (!PAGE_SEGMENT_SHAPE.test(segment)) bad.add(dir);
+    }
+  }
+  for (const page of pages) {
+    if (page === ENTRY_PAGE) continue;
+    const segments = page.split('/');
+    const stem = (segments[segments.length - 1] ?? '').replace(/\.md$/, '');
+    for (const segment of [...segments.slice(0, -1), stem]) {
+      if (!PAGE_SEGMENT_SHAPE.test(segment)) bad.add(page);
+    }
+  }
+  return [...bad].sort();
 }
 
 describe('fact ledger metadata', () => {
@@ -467,22 +660,88 @@ describe('fact ledger metadata', () => {
     ).toEqual([]);
   });
 
-  it('keeps the reference index and the reference files in step', () => {
-    // A reference that exists but is not indexed is unreachable; one that is
-    // indexed but missing is a dead link. Both fail here rather than at read time.
-    expect(referencedFiles()).toEqual(referenceFiles());
+  it('indexes every entry page from SKILL.md, and nothing else', () => {
+    // L0 stays a thin, version-neutral index: growing a category adds a
+    // `references/<dir>/index.md`, never a link onto SKILL.md itself.
+    expect(linksOn(ENTRY_PAGE), 'SKILL.md index').toEqual(entryPages(skillPages()));
+  });
+
+  it('keeps every directory index in step with the pages it owns', () => {
+    const pages = skillPages();
+    // `references/` itself is indexed by `SKILL.md` — see the entry test above.
+    const dirs = skillDirs(pages).filter((dir) => dir !== 'references');
+    for (const dir of dirs) {
+      const index = dirIndex(dir);
+      expect(existsSync(join(SKILL_DIR, index)), `${dir} needs ${index}`).toBe(true);
+      // Names all its members (so none is orphaned); extra cross-category
+      // links are allowed and checked for existence below.
+      expect(linksOn(index), `${index} index`).toEqual(
+        expect.arrayContaining(dirMembers(dir, pages))
+      );
+    }
+  });
+
+  it('links only to pages that exist', () => {
+    expect(deadLinks(skillPages())).toEqual([]);
+  });
+
+  it('reaches every page from SKILL.md', () => {
+    const pages = skillPages();
+    const reachable = reachablePages(pages);
+    expect(
+      pages.filter((page) => !reachable.has(page)),
+      'unreachable pages'
+    ).toEqual([]);
+  });
+
+  it('gives every page a backlink to the index that owns it', () => {
+    const missing = skillPages()
+      .filter((page) => page !== ENTRY_PAGE)
+      .filter((page) => !readFileSync(join(SKILL_DIR, page), 'utf8').includes(parentIndex(page)));
+    expect(missing, 'pages that never name their parent index').toEqual([]);
+  });
+
+  it('names every page and directory in lowercase kebab-case', () => {
+    const pages = skillPages();
+    expect(badNames(pages, skillDirs(pages))).toEqual([]);
   });
 });
 
 describe('fact ledger re-verification', () => {
   // Computed once: whether the vendored checkout is here is a property of the
   // machine, not of test order.
-  const local = referenceCandidates();
+  const local = referenceCensus();
 
   it('finds nothing to re-verify when the reference tree is absent (the normal case)', () => {
-    const { available, pending } = referenceCandidates(join(ROOT, 'no-such-reference-tree'));
-    expect(available).toEqual([]);
-    expect(pending.map((fact) => fact.id).sort()).toEqual(facts.map((fact) => fact.id).sort());
+    const absent = referenceCensus(join(ROOT, 'no-such-reference-tree'));
+    expect(absent.available).toEqual([]);
+    expect(absent.unverifiable).toEqual([]);
+    expect(absent.pending.map((fact) => fact.id).sort()).toEqual(
+      facts.map((fact) => fact.id).sort()
+    );
+  });
+
+  it('re-verifies exactly the facts pinned to the local checkout revision', () => {
+    // A checkout at a revision nothing pins: every fact is skipped, none fails.
+    const unknown = referenceCensus(fakeReferenceRoot('9.9.9'));
+    expect(unknown.available).toEqual([]);
+    expect(unknown.pending).toEqual([]);
+    expect(unknown.unverifiable.map((fact) => fact.id).sort()).toEqual(
+      facts.map((fact) => fact.id).sort()
+    );
+
+    // A checkout at a pinned revision: that revision's facts, and only those.
+    for (const version of pinnedVersions()) {
+      const census = referenceCensus(fakeReferenceRoot(version));
+      expect(census.available.map((fact) => fact.id).sort()).toEqual(idsPinnedTo(version));
+      expect(census.pending).toEqual([]);
+      expect(census.unverifiable.map((fact) => fact.id).sort()).toEqual(
+        facts
+          .filter((fact) => versionFromTag(fact.source) !== version)
+          .map((fact) => fact.id)
+          .sort()
+      );
+    }
   });
 
   it('agrees with the vendored reference when it is present', () => {
@@ -494,21 +753,6 @@ describe('fact ledger re-verification', () => {
     }
 
     const failures: string[] = [];
-
-    for (const source of new Set(local.available.map((fact) => fact.source))) {
-      const reference = REFERENCES[repoOf(source)];
-      if (reference === undefined) continue;
-      const packageJsonPath = join(R3P_DIR, reference.dir, reference.packageJson);
-      expect(existsSync(packageJsonPath), `${source}: missing ${packageJsonPath}`).toBe(true);
-      const declared = (JSON.parse(readFileSync(packageJsonPath, 'utf8')) as { version?: string })
-        .version;
-      const expected = versionFromTag(source);
-      if (declared !== expected) {
-        failures.push(
-          `${source}: checkout declares version "${declared}", ledger pins "${expected}"`
-        );
-      }
-    }
 
     for (const fact of local.available) {
       const reference = REFERENCES[repoOf(fact.source)];
@@ -530,12 +774,15 @@ describe('fact ledger re-verification', () => {
     expect(failures).toEqual([]);
   });
 
-  it('actually re-verified the checkout when it is present', () => {
-    // Guards against the verification silently becoming a no-op on a machine
-    // that does have 3rdp/ — absent here means "nothing to check", not "pass".
-    if (local.available.length === 0) {
+  it('sees the vendored checkout when it is present', () => {
+    // Guards against the census silently classifying everything as "no
+    // checkout": on a machine that does have 3rdp/, some facts must be
+    // accounted for — even when every one of them is pinned to another revision.
+    if (!existsSync(R3P_DIR)) {
       return;
     }
-    expect(local.available.length).toBeGreaterThan(0);
+    expect(local.pending.length, 'checkout is here but nothing was seen').toBeLessThan(
+      facts.length
+    );
   });
 });

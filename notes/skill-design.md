@@ -39,7 +39,7 @@
 
 链接形态：站内链接统一写成相对 `skill/` 的路径（`references/…md`），禁止 `../` 与裸文件名。
 
-- **索引边**：`SKILL.md` 必须恰好索引所有入口页（顶层 `references/*.md` + 每个 `references/<大类>/index.md`）；每个 `index.md` 必须恰好索引本目录下的 `*.md`（不含自身）与下一级目录的 `index.md`。
+- **索引边**：`SKILL.md` 必须**恰好**索引所有入口页（顶层 `references/*.md` + 每个 `references/<大类>/index.md`）且不带其它链接——L0 要保持薄与稳定，新增大类只加一行；每个 `index.md` 必须**至少**索引本目录下的 `*.md`（不含自身）与下一级目录的 `index.md`，允许额外的交叉引用（`references/` 目录本身由 `SKILL.md` 索引，不需要 `references/index.md`）。
 - **引用边**：任何页面都可交叉引用任何页面，**允许成环**（整体是图不是树），但目标必须存在（无死链），且全图从 `SKILL.md` 可达。
 - **回链**：每个非 `SKILL.md` 页面必须出现其父索引路径（顶层入口页的父是 `SKILL.md`）。
 - **两段式引用语法**：

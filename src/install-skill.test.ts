@@ -100,6 +100,31 @@ describe('installSkill', () => {
     expect(readFileSync(join(skillTarget(dshHome), 'references/a.md'), 'utf8')).toBe('a2');
   });
 
+  it('syncs a nested reference tree (three levels deep)', () => {
+    const dshHome = tempDir();
+    const nested = {
+      'references/dsh/index.md': 'dsh index',
+      'references/dsh/versions/index.md': 'versions index',
+      'references/dsh/versions/0.1.7-to-0.2.0.md': 'diff v1',
+    };
+    const deep = join(skillTarget(dshHome), 'references/dsh/versions/0.1.7-to-0.2.0.md');
+
+    expect(installSkill({ dshHome, source: makeSource('v1', nested) })).toEqual({ ok: true });
+    expect(readFileSync(deep, 'utf8')).toBe('diff v1');
+
+    // A change three levels down still refreshes the whole tree.
+    expect(
+      installSkill({
+        dshHome,
+        source: makeSource('v1', {
+          ...nested,
+          'references/dsh/versions/0.1.7-to-0.2.0.md': 'diff v2',
+        }),
+      })
+    ).toEqual({ ok: true });
+    expect(readFileSync(deep, 'utf8')).toBe('diff v2');
+  });
+
   it('refreshes the target when it is missing a bundled reference file', () => {
     const dshHome = tempDir();
     installSkill({ dshHome, source: makeSource('v1') });
