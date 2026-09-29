@@ -23,7 +23,7 @@ skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无�
 
 - **`skill/` 是 skill 的单一真源**：构建期由 `scripts/build-skill.mjs` 整目录拷入 `dist/skill`，`files` 只发布 `dist`、`cordis.patch.yml` 与 postinstall 脚本；缺 `skill/SKILL.md` 时构建**硬失败**（宁可不出包，也不出没有 skill 的包）。
 - **skill 内容属于产品源码**：`skill/**` 的改动提交用 `feat(skill): ` 前缀，**不是** `docs:`——md 只是形态，产品是内容。
-- **skill 结构契约**：`skill/**` 的层级、命名、索引与引用、版本与占位规则以 `notes/skill-design.md` 为准，`src/facts.test.ts` 是机器校验；`SKILL.md`（L0）不得含上游路径、semver 字面量与 `<repo>@<tag>`（保证它不随 dsh 版本变动），`references/**` 每页声明事实 pin。（结构落地见 plan #5。）
+- **skill 结构契约**：`skill/**` 的层级、命名、索引与引用、版本与占位规则以 `notes/skill-design.md` 为准，`src/facts.test.ts` 是机器校验；`SKILL.md`（L0）不得含上游路径、semver 字面量与 `<repo>@<tag>`（保证它不随 dsh 版本变动），`references/**` 的**内容页**（非 `index.md`）必须声明事实 pin，占位行必须带 `plan #<id>`。（结构落地见 plan #5。）
 - **`install-skill` 是 content-sync，不是无条件覆盖**（`src/install-skill.ts`）：目标与源的**整树**（`SKILL.md` + `references/` 逐文件字节）一致就不动（避免每次开会话都抖动）；目标本身是 symlink 则**不覆盖**（开发流可能用它接管该目录）；每个失败只记一行并返回 `{ ok: false }`，**绝不使插件加载或包安装失败**。
 - **两个触发点**：`package.json` 的 postinstall（npm 总会跑；pnpm 10+ 默认拦截依赖构建脚本，需 allowlist）与宿主 `apply()` 内的同步（**保底路径**，postinstall 被拦也能生效）。
 - **`cordis.patch.yml` 是插件的挂载声明**，三条契约（改动前先读文件头注释）：条目必须用 `insert:` 列表包裹（裸 `- id/name` 是覆盖语义）、`config` 必须显式给出（空对象即可）、与 profile 里手写的同 id 条目并存**不报错**——0.1.7-rc.2 是 last-wins 静默复用/替换（旧说法 `duplicate loader entry id` 在 0.1.7-rc.2 已无此抛错，见 issue #16）；该文件必须留在 `files` 随包发布。

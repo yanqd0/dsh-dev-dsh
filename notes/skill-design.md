@@ -49,7 +49,7 @@
 ## 4. 版本维度
 
 - **主干跨版本稳定**：架构页、契约页写层次与主干流转，不写会随版本改写的清单；清单进版本页。
-- **每页声明 pin**：正文头部给出 `deepseek-harness@dsh-vX.Y.Z[-rc.N]`；本仓当前基准 `dsh-v0.2.0-rc.1`（与本机运行时一致）。
+- **内容页声明 pin**：每个**内容页**（`references/**` 下非 `index.md` 的页）在正文头部给出 `deepseek-harness@dsh-vX.Y.Z[-rc.N]`；本仓当前基准 `dsh-v0.2.0-rc.1`（与本机运行时一致）。索引页只做导航、不承载事实，不要求 pin。
 - **版本页**：`references/dsh/versions/index.md` 列支持窗口与差分页命名 `references/dsh/versions/<from>-to-<to>.md`（回链本索引），形态是**反 CHANGELOG**：讲清从哪版到哪版、什么被改/删、历史插件为什么坏、升级要改什么。
 - **不复制整页**：多版本共存时不复制成多份页面，只在受影响页加「版本差异」小节并指向版本页。
 - **事实台账**：`skill/**` 每引用一条上游事实，必须在 `src/facts.test.ts` 登记一条 fact（`source` / `path` / 可选 `line` / `note`），反之亦然。
