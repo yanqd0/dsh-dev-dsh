@@ -59,7 +59,7 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `dist/`：构建产物（gitignored），只含 `index` / `install-skill` 两个 ESM 入口与 `skill/` 副本。
 - `cordis.patch.yml`：挂载声明（见上「硬约束」），必须随包发布。
 - `scripts/`：`build-skill.mjs`（拷 skill）、`install-skill-postinstall.mjs`（postinstall 守卫：`dist/install-skill.js` 不存在时静默跳过）。
-- `skill/`：skill 单一真源。`SKILL.md` = 主体（定位、官方能力路由、仓外清单、patch 约束、分发与验收）；`references/` = 三个分册（挂载与清单、宿主入口与 DI、构建与踩坑）。正文引用上游路径时必须同步登记 fact。
+- `skill/`：skill 单一真源。`SKILL.md` = 主体（定位、官方能力路由、仓外清单、patch 约束、客户端运行期排障、分发与验收）；`references/` = 四个分册（挂载与清单、宿主入口与 DI、构建与踩坑、客户端运行期取证）。正文引用上游路径时必须同步登记 fact。
 - `notes/evaluation.md`：方向评估与决策记录（含 §8 决策、§8.5 版本规划），是「为什么这样定位」的权威来源；`notes/dsh-old/` 是指向 `../../my-agents/notes/dsh` 的**本机符号链接**，在别的机器上是 dangling，不作为项目内容。
 - `3rdp/`：**开发期本地参考**，gitignored。当前只有 dsh 代码库的只读快照（`deepseek-harness`），用于源码考古；**测试 / 生产（用户环境安装）下默认不存在，且不存在时构建、运行、`pnpm test` 全部正常**。未来可能增补其它参考（如 cordis，是否纳入待评估）；增补时须同步 `src/facts.test.ts` 的 fact 清单。
 - `src/facts.test.ts`：`skill/**` 中 dsh 事实的**唯一可校验来源**。每条 fact 记 `source`（`<repo>@<tag>`，如 `deepseek-harness@dsh-v0.1.7-rc.2`）、`path`、可选 `line`。元数据断言始终执行（含「`skill/**` 引用的上游路径（`packages|apps|docs|.agents|vendor`）必须都已登记」与「`SKILL.md` 索引的分册与 `skill/references/` 实存文件一一对应」）；校验层只在 `3rdp/<repo>/` 存在时才跑：先比对 checkout 版本与 pin，再逐条查路径与行号，失效时一次性列出全部条目。**无 `3rdp/` 时不报错、不告警**——那是测试/生产环境的常态。`skill/**` 每引用一条上游事实，必须同步加一条 fact，反之亦然。
@@ -71,6 +71,8 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `AGENTS.md`（本文件）：项目导航与硬约束。
 - `notes/evaluation.md`：方向评估、决策与版本规划。
 - `notes/runtime-triage.md`：DSH 运行时故障的低成本定位法（诊断流程 + 反模式清单；未来进 skill 分册）。
+- `notes/client-console-diagnosis.md`：浏览器客户端层的取证法（Console 只读探针、React fiber 取活状态、判定矩阵、插桩纪律）；已整理为 skill 分册 `skill/references/client-console-diagnosis.md`。
+- `notes/resource-preview-protocol-bug.md`：文件/计划预览「不可用」的问题记录（现象 / 根因 / 解决方案；上游 issue 素材）。
 - mint plan / issue：计划与进度真源（本仓当前：milestone `0.1.0`；具体 plan 号以 `mint plan list` 为准，不在此处写死）。
 
 ## 不要做
