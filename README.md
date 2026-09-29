@@ -36,23 +36,27 @@ Development is planned in two milestone lines; the live plan is tracked with
 the `mint` tool in this project. The release mechanics are in
 [Publishing](#publishing).
 
-**0.1.0 — a dsh 0.1.7 skill that ships with its plugin**
+**0.1.0 — an out-of-tree authoring manual that ships with its plugin**
 
-- Fix the dsh 0.1.7 out-of-tree authoring method as a `SKILL.md` shipped inside
-  the package, covering what the official creator skill leaves out.
+- Ship the out-of-tree DSH authoring method as a **lazy-loaded manual**: a thin
+  `SKILL.md` entry plus per-category reference trees, so an agent can develop a
+  plugin and diagnose it without reading dsh source.
+- Content baseline is the dsh version the runtime actually carries
+  (`0.2.0-rc.1`); the references pinned to the earlier `0.1.7-rc.2` are being
+  re-verified as part of that move.
 - Install that skill as part of `dsh plugin add`, so the knowledge arrives with
   the plugin instead of being copied by hand.
 - Publish the first version to npm.
 
-**0.2.0+ — plugin categories and dsh drift**
+**0.2.0+ — the full manual, plugin categories and dsh drift**
 
-- Fill in plugin categories one at a time: client/UI bundles, MCP, skill-only
-  plugins, presets, tools and hooks.
+- Fill the three categories: per-class plugin development flows, the dsh
+  module / built-in-plugin / version knowledge base, and the dogfood &
+  diagnosis flows.
+- Record a reverse CHANGELOG for `0.1.7-rc.2 → 0.2.0-rc.1`, so a historical
+  plugin's breakage and upgrade path are known before they are rediscovered.
 - Add static checks for the out-of-tree package contract, with rules keyed by
   dsh version.
-- Maintain the version-difference knowledge for dsh releases after 0.1.7
-  (session format v3 → v4, the removed completion API, the peer compatibility
-  gate), so a class of breakage is known before it is rediscovered.
 
 Later versions follow the upstream release cadence rather than a fixed
 schedule.
