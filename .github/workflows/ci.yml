@@ -1,0 +1,31 @@
+# CI：push 到 master 与 PR 上跑完整门禁。
+# test:coverage 自带阈值（lines/functions/statements 80、branches 70），无需外部服务。
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5 # v5 起运行时 node24；v4 为 node20，已被 GitHub 弃用
+        with:
+          version: 11
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22.x'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm check-types
+      - run: pnpm test:coverage
+      - run: pnpm build
+      - run: pnpm pack:check

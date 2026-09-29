@@ -93,6 +93,44 @@ pnpm pack:check     # pnpm pack --dry-run: inspect what would actually be publis
 Issue, plan, and milestone tracking lives in `mint`, not in these docs;
 [AGENTS.md](AGENTS.md) is the contributor-facing project navigation.
 
+## Publishing
+
+Two registries carry the same name: npmjs (the primary source) and GitHub
+Packages. `package.json` needs no `publishConfig` — each workflow job sets its
+registry through `actions/setup-node`'s `registry-url`, exactly as `dsh-mint`
+does.
+
+**First release (local, once).** npmjs trusted publishing can only be
+configured for a package that already exists, so the first publish is manual:
+
+```bash
+pnpm install
+pnpm build
+pnpm pack:check                                    # verify dist + cordis.patch.yml + skill
+npm publish --access public --tag alpha            # prerelease: --tag alpha
+npm publish --access public                        # or a stable version
+```
+
+Then open the package on npmjs and register this repository plus
+`.github/workflows/publish-npm.yml` as its trusted publisher.
+
+**Later releases (CI).** Pushing a tag whose name is the version (with or
+without a `v` prefix) runs `.github/workflows/publish-npm.yml`:
+
+- `gate` fails unless the tag equals `package.json`'s version; a version with a
+  `-` (such as `0.1.0-alpha.1`) stops after `test` and publishes nothing.
+- stable versions publish to npmjs over OIDC (`--provenance`, no token), then
+  to GitHub Packages with `GITHUB_TOKEN`, then create a GitHub Release from the
+  tag's generated notes.
+
+```bash
+git tag 0.1.0 && git push origin 0.1.0             # stable: publishes and releases
+git tag v0.1.0-alpha.2 && git push origin v0.1.0-alpha.2   # prerelease: gate + test only
+```
+
+Version numbers in a prerelease line stay in that line (`0.1.0-alpha.N`) until
+0.1.0 itself ships.
+
 `3rdp/` is a local, gitignored reference checkout of the harness used for source
 archaeology. It is **not** part of the package and is **not required**: a clone
 or install without it builds, runs, and tests normally. Where it is present,

@@ -1,0 +1,122 @@
+# npm 发布：tag vX.Y.Z 激活；gate 校验 tag 与 package.json 版本一致 + stable 判定。
+# 双注册表发布 @yanqd0/dsh-dev-dsh：npmjs 走 OIDC trusted publishing
+# （permissions: id-token: write，npm publish --provenance 免 token）；GitHub Packages
+# 走 GITHUB_TOKEN + packages: write，同名直接发布，无需改名。
+# 预发布（-alpha/-beta）只跑 gate + test，不发布。
+#
+# 首次发布必须走本地（npmjs 的 trusted publisher 只能在包已存在后配置）：
+#   npm publish --access public --tag alpha   # 预发布用 alpha tag
+#   npm publish --access public               # stable
+# 之后在 npmjs 包设置里把本仓库与 publish-npm.yml 登记为 trusted publisher。
+name: Publish npm
+
+on:
+  push:
+    tags: ['v*', '[0-9]*.[0-9]*.[0-9]*']
+
+permissions:
+  contents: read
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      is_stable: ${{ steps.check.outputs.is_stable }}
+    steps:
+      - uses: actions/checkout@v5
+      - id: check
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$TAG" != "$VERSION" ]; then
+            echo "::error::tag($TAG) != package.json($VERSION)"; exit 1
+          fi
+          case "$VERSION" in
+            *-*) echo "is_stable=false" >> "$GITHUB_OUTPUT" ;;
+            *)   echo "is_stable=true" >> "$GITHUB_OUTPUT" ;;
+          esac
+
+  test:
+    needs: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5 # v5 起运行时 node24；v4 为 node20，已被 GitHub 弃用
+        with:
+          version: 11
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22.x'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm check-types
+      - run: pnpm test:coverage
+      - run: pnpm build
+      - run: pnpm pack:check
+
+  publish:
+    needs: [gate, test]
+    if: needs.gate.outputs.is_stable == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # OIDC 可信发布（npmjs 侧需一次性授权本仓库）
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+        with:
+          version: 11
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22.x'
+          registry-url: 'https://registry.npmjs.org'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - run: npm install -g npm@11 # OIDC 发布需 npm >= 11.5.1
+      - run: npm publish --provenance --access public
+
+  publish-github:
+    # GitHub Packages：npmjs 成功后才发；同名 @yanqd0/dsh-dev-dsh 直接发布（无需改名）
+    needs: [gate, test, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # GITHUB_TOKEN 即可，无需 PAT
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v5
+        with:
+          version: 11
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22.x'
+          registry-url: 'https://npm.pkg.github.com'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: Publish to GitHub Packages
+        env:
+          NODE_AUTH_TOKEN: ${{ github.token }}
+        run: npm publish
+
+  release:
+    # GitHub Release：notes 从本 tag 的 commit 生成（本仓无 CHANGELOG，不引用它）。
+    needs: [gate, test, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # 创建 Release（顶层 contents: read，此处覆盖）
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: 创建 GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if ! gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release create "$GITHUB_REF_NAME" \
+              --title "$GITHUB_REF_NAME" \
+              --generate-notes
+          fi
