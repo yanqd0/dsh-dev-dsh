@@ -7,6 +7,8 @@
 
 单包，无 workspace。`0.1.0` 只覆盖**宿主面**；客户端 / UI 插件属 `0.2.0`（见 `notes/evaluation.md` §8.5）。核心交付物是 **skill 随插件安装**：`skill/SKILL.md` 经构建进入 `dist/skill`，随 npm 包发布，并在插件加载或 postinstall 时同步到 `~/.dsh/skills/dsh-dev-dsh`。
 
+skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无关）+ 多级 `references/`，按三大类（插件开发 / dsh 本体 / dogfood 与定位）组织，让 agent 不读 dsh 源码即可开发插件与定位问题；结构契约以 `notes/skill-design.md` 为权威。内容基准 = 本机运行时的 dsh 版本（当前 `0.2.0-rc.1`，理由见 `notes/evaluation.md` §8.6）。
+
 同类项目盘点（本仓项目级文件的写法依据）：
 
 | 仓库          | 项目级文件                                | 形态                                                                                                      |
@@ -20,6 +22,8 @@
 ## 硬约束
 
 - **`skill/` 是 skill 的单一真源**：构建期由 `scripts/build-skill.mjs` 整目录拷入 `dist/skill`，`files` 只发布 `dist`、`cordis.patch.yml` 与 postinstall 脚本；缺 `skill/SKILL.md` 时构建**硬失败**（宁可不出包，也不出没有 skill 的包）。
+- **skill 内容属于产品源码**：`skill/**` 的改动提交用 `feat(skill): ` 前缀，**不是** `docs:`——md 只是形态，产品是内容。
+- **skill 结构契约**：`skill/**` 的层级、命名、索引与引用、版本与占位规则以 `notes/skill-design.md` 为准，`src/facts.test.ts` 是机器校验；`SKILL.md`（L0）不得含上游路径、semver 字面量与 `<repo>@<tag>`（保证它不随 dsh 版本变动），`references/**` 每页声明事实 pin。（结构落地见 plan #5。）
 - **`install-skill` 是 content-sync，不是无条件覆盖**（`src/install-skill.ts`）：目标与源的**整树**（`SKILL.md` + `references/` 逐文件字节）一致就不动（避免每次开会话都抖动）；目标本身是 symlink 则**不覆盖**（开发流可能用它接管该目录）；每个失败只记一行并返回 `{ ok: false }`，**绝不使插件加载或包安装失败**。
 - **两个触发点**：`package.json` 的 postinstall（npm 总会跑；pnpm 10+ 默认拦截依赖构建脚本，需 allowlist）与宿主 `apply()` 内的同步（**保底路径**，postinstall 被拦也能生效）。
 - **`cordis.patch.yml` 是插件的挂载声明**，三条契约（改动前先读文件头注释）：条目必须用 `insert:` 列表包裹（裸 `- id/name` 是覆盖语义）、`config` 必须显式给出（空对象即可）、与 profile 里手写的同 id 条目并存**不报错**——0.1.7-rc.2 是 last-wins 静默复用/替换（旧说法 `duplicate loader entry id` 在 0.1.7-rc.2 已无此抛错，见 issue #16）；该文件必须留在 `files` 随包发布。
@@ -60,7 +64,7 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `cordis.patch.yml`：挂载声明（见上「硬约束」），必须随包发布。
 - `scripts/`：`build-skill.mjs`（拷 skill）、`install-skill-postinstall.mjs`（postinstall 守卫：`dist/install-skill.js` 不存在时静默跳过）。
 - `skill/`：skill 单一真源。`SKILL.md` = 主体（定位、官方能力路由、仓外清单、patch 约束、客户端运行期排障、分发与验收）；`references/` = 四个分册（挂载与清单、宿主入口与 DI、构建与踩坑、客户端运行期取证）。正文引用上游路径时必须同步登记 fact。
-- `notes/evaluation.md`：方向评估与决策记录（含 §8 决策、§8.5 版本规划），是「为什么这样定位」的权威来源；`notes/dsh-old/` 是指向 `../../my-agents/notes/dsh` 的**本机符号链接**，在别的机器上是 dangling，不作为项目内容。
+- `notes/evaluation.md`：方向评估与决策记录（含 §8 决策、§8.5 版本规划、§8.6 skill 定位修订），是「为什么这样定位」的权威来源；`notes/skill-design.md` 是 skill 结构契约的权威（层级 / 命名 / 索引与引用 / 版本维度 / 占位纪律 / 演进步骤）；`notes/dsh-old/` 是指向 `../../my-agents/notes/dsh` 的**本机符号链接**，在别的机器上是 dangling，不作为项目内容。
 - `3rdp/`：**开发期本地参考**，gitignored。当前只有 dsh 代码库的只读快照（`deepseek-harness`），用于源码考古；**测试 / 生产（用户环境安装）下默认不存在，且不存在时构建、运行、`pnpm test` 全部正常**。未来可能增补其它参考（如 cordis，是否纳入待评估）；增补时须同步 `src/facts.test.ts` 的 fact 清单。
 - `src/facts.test.ts`：`skill/**` 中 dsh 事实的**唯一可校验来源**。每条 fact 记 `source`（`<repo>@<tag>`，如 `deepseek-harness@dsh-v0.1.7-rc.2`）、`path`、可选 `line`。元数据断言始终执行（含「`skill/**` 引用的上游路径（`packages|apps|docs|.agents|vendor`）必须都已登记」与「`SKILL.md` 索引的分册与 `skill/references/` 实存文件一一对应」）；校验层只在 `3rdp/<repo>/` 存在时才跑：先比对 checkout 版本与 pin，再逐条查路径与行号，失效时一次性列出全部条目。**无 `3rdp/` 时不报错、不告警**——那是测试/生产环境的常态。`skill/**` 每引用一条上游事实，必须同步加一条 fact，反之亦然。
 - `README.md`（英，对外）/ `AGENTS.md`（中，对内）；计划真源是 mint 里的 plan / issue，**不是**任何 md 文档。
@@ -70,6 +74,7 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `README.md`：项目介绍、Status、Layout、Development。
 - `AGENTS.md`（本文件）：项目导航与硬约束。
 - `notes/evaluation.md`：方向评估、决策与版本规划。
+- `notes/skill-design.md`：skill 结构契约与外置手册设计指南（层级 / 命名 / 索引与引用 / 版本维度 / 保鲜纪律 / 占位纪律 / 演进步骤 / plan 边界）。
 - `notes/runtime-triage.md`：DSH 运行时故障的低成本定位法（诊断流程 + 反模式清单；未来进 skill 分册）。
 - `notes/client-console-diagnosis.md`：浏览器客户端层的取证法（Console 只读探针、React fiber 取活状态、判定矩阵、插桩纪律）；已整理为 skill 分册 `skill/references/client-console-diagnosis.md`。
 - `notes/resource-preview-protocol-bug.md`：文件/计划预览「不可用」的问题记录（现象 / 根因 / 解决方案；上游 issue 素材）。
