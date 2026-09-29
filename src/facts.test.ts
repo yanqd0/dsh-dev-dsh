@@ -105,6 +105,16 @@ const facts: Fact[] = [
     note: '官方 cookbook 明说仓外包自行复现 client 构建',
   },
   {
+    id: 'client-resource-protocol-parse',
+    source: 'deepseek-harness@dsh-v0.1.7-rc.2',
+    path: 'packages/client/resources/src/client/resources.ts',
+    line: 67,
+    note:
+      'protocolOf() 用 new URL(address).hostname 取资源类型；Chromium 对 dsh-resource://file/… ' +
+      '给空 hostname（file 是特殊 scheme 名），Node 给 "file" ⟹ 浏览器里文件/计划预览报「不可用」。' +
+      '见 references/client-console-diagnosis.md',
+  },
+  {
     id: 'out-of-tree-is-a-non-goal',
     source: 'deepseek-harness@dsh-v0.1.7-rc.2',
     path: '.agents/notes/archived/simplification/2026-08-11-remove-sdk-project-toolchain.zh.md',

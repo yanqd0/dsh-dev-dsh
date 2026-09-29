@@ -89,7 +89,19 @@ pnpm ≥10 默认拦截构建脚本（`ERR_PNPM_IGNORED_BUILDS`），pending 项
 - **版本化事实台账**：每条上游事实记 `<repo>@<tag>` + `path`(+`line`)；元数据断言始终跑，
   "checkout 存在时逐条复核"是可选路径——参考树在测试/生产环境通常不存在，缺失必须静默跳过。
 
-## 7. 验收清单
+## 7. 客户端运行期排障：读活状态，别改安装树
+
+「服务端日志干净、终端正常，但页面上某处不对」时，先用**只读探针**把运行中的真实状态读出来，
+再谈机制：从 DOM 的 React fiber 上取组件 props / 已渲染的 hook 值，用 `ctx.get(name)` 读服务
+（未注入的属性会被 cordis proxy 拒绝，`get` 永远允许），并让探针**永不抛**。
+
+优先顺序：**Console 只读探针 > 框架既有机制 > 改 bundle**。改 bundle 是最后手段，且必须
+先备份、插在两个完整语句之间、改完 `node --check`、用完还原——插进 `f(...)` 的 `f` 与 `(...)`
+之间会让整页白屏（本案踩过）。
+
+判定矩阵、固定探针骨架、反模式与插桩纪律：`references/client-console-diagnosis.md`。
+
+## 8. 验收清单
 
 ```sh
 pnpm pack --dry-run                      # 产物里真有入口与 patch
@@ -102,11 +114,12 @@ dsh --profile <p> --dump-config          # 确认自己那一层存在
 
 ## references
 
-| 主题                                                 | 文件                                  |
-| ---------------------------------------------------- | ------------------------------------- |
-| 挂载与清单：patch 语义、层序、包清单字段             | `references/mounting-and-manifest.md` |
-| 宿主入口与 DI：导出形态、Config 校验、工具注册、事件 | `references/host-entry-and-di.md`     |
-| 构建、发布与踩坑：仓外仓库的工程面                   | `references/build-and-pitfalls.md`    |
+| 主题                                                   | 文件                                     |
+| ------------------------------------------------------ | ---------------------------------------- |
+| 挂载与清单：patch 语义、层序、包清单字段               | `references/mounting-and-manifest.md`    |
+| 宿主入口与 DI：导出形态、Config 校验、工具注册、事件   | `references/host-entry-and-di.md`        |
+| 构建、发布与踩坑：仓外仓库的工程面                     | `references/build-and-pitfalls.md`       |
+| 客户端运行期取证：Console 只读探针、判定矩阵、插桩纪律 | `references/client-console-diagnosis.md` |
 
 上游事实的版本 pin 与来源记录在 `src/facts.test.ts` 的 fact 清单里（绑定
 `deepseek-harness@dsh-v0.1.7-rc.2`）：本 skill 每引用一条上游事实，必须同步登记一条 fact。
