@@ -78,6 +78,16 @@ flowchart LR
   SESSION -->|"session/event 投影"| VIEW
   SESSION -->|"published language vN"| SDK
   ACL -->|"能力事件 / 工具"| REG
+
+  classDef business fill:#ede9fe,stroke:#8b5cf6,color:#3b0764
+  classDef gateway fill:#e0f2f1,stroke:#00897b,color:#004d40
+  classDef frontend fill:#dbeafe,stroke:#3b82f6,color:#1e3a5f
+  classDef external fill:#f3f4f6,stroke:#9ca3af,color:#1f2937
+  class AGENT,SESSION,LOOP,PIPELINE business
+  class REG gateway
+  class VIEW frontend
+  class SDK,ACL external
+
   style bc_host fill:#ede9fe,stroke:#8b5cf6
   style bc_client fill:#dbeafe,stroke:#3b82f6
   style bc_outer fill:#f3f4f6,stroke:#9ca3af

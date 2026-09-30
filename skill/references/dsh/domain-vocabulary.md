@@ -21,13 +21,18 @@
 
 ## 2. 术语域
 
+**图 1：capability 与 scope（能力怎么被替换对注册对谁可见）**
+
 ```mermaid
 ---
-title: 官方术语的域
+title: capability 与 scope
 ---
 mindmap
-  dsh domain vocabulary
+  root((dsh vocabulary - capability and scope))
     capability-seam
+      Service Definition
+      Service Provider
+      Consumer
     agent-scope
       scope
       scope key
@@ -38,6 +43,16 @@ mindmap
       restriction
       setup window
       lineage
+```
+
+**图 2：运行层级、目标与命令（一次运行在哪一层计数、谁能续跑）**
+
+```mermaid
+---
+title: 运行层级、目标与命令
+---
+mindmap
+  root((dsh vocabulary - execution and goals))
     loop hierarchy
       turn
       step

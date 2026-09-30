@@ -38,15 +38,16 @@
 
 ```mermaid
 ---
-title: 生效配置的叠加顺序
+title: 生效配置的叠加顺序（同一行后应用者胜）
 ---
 %%{init: {'theme': 'base', 'themeVariables': {'clusterBkg': '#f9fafb', 'clusterBorder': '#d1d5db'}}}%%
 flowchart TB
-  ROOT["空根条目列表"]
-  subgraph L1["第 1 层：各组合包"]
+  ROOT(("空根条目列表"))
+  subgraph L1["第 1 层：各组合包，按 dsh.profile.bundles 顺序"]
     direction LR
-    B1["dsh.profile.bundles[0]<br/>的 patch"]
-    B2["…按列表顺序…"]
+    B1["bundle[0] 的 patch"]
+    B2["bundle[1] 的 patch"]
+    B3["…后续组合包"]
   end
   subgraph L2["第 2 层：profile 自己的 patch"]
     direction LR
@@ -58,9 +59,9 @@ flowchart TB
   end
   subgraph L4["第 4 层：本次调用"]
     direction LR
-    O1["--patch &lt;path&gt;<br/>按 argv 顺序"]
+    O1["--patch &lt;path&gt;，按 argv 顺序"]
   end
-  ROOT --> L1 --> L2 --> L3 --> L4
+  ROOT --> L1 --> L2 --> L3 -->|"按行：后应用者胜"| L4
   style L1 fill:#d1fae5,stroke:#10b981
   style L2 fill:#dbeafe,stroke:#3b82f6
   style L3 fill:#fef3c7,stroke:#f59e0b
