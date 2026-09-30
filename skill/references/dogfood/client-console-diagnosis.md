@@ -130,8 +130,9 @@
 > ③ 只替换表达式片段、漏掉行首 `return` → `return return …`。
 > 三次都语法合法或接近合法 ⟹ 唯一可靠的护栏是**语义自检 + 幂等时复验语义**。
 
-## 7. 与 `notes/runtime-triage.md` 的分工
+## 7. 与另两页的分工
 
-- `notes/runtime-triage.md`（本仓 `notes/`）：**宿主/传输/部署**层的低成本定位法与反模式。
+- `references/dogfood/runtime-evidence.md`：证据在哪、怎么取（宿主进程输出 / 启动失败报告 / 操作日志 / logger sink）。
+- `references/dogfood/runtime-triage.md`：定位顺序、判据与反模式（宿主 / 传输 / 部署层）。
 - 本文：**浏览器客户端**层的取证法与判定矩阵。
-- 两者共用同一条纪律：先锁文案/状态，再谈机制；把已证伪项写下来，下一轮不重查。
+- 三者共用同一条纪律：先锁文案/状态，再谈机制；把已证伪项写下来，下一轮不重查。

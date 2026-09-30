@@ -79,7 +79,7 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `AGENTS.md`（本文件）：项目导航与硬约束。
 - `notes/evaluation.md`：方向评估、决策与版本规划。
 - `notes/skill-design.md`：skill 结构契约与外置手册设计指南（层级 / 命名 / 索引与引用 / 版本维度 / 术语与语言纪律 / 保鲜纪律 / 占位纪律 / 演进步骤 / plan 边界）。
-- `notes/runtime-triage.md`：DSH 运行时故障的低成本定位法（诊断流程 + 反模式清单；未来进 skill 分册）。
+- `notes/runtime-triage.md`：DSH 运行时故障的低成本定位法（诊断流程 + 反模式清单）；已整理为 skill 分册 `skill/references/dogfood/runtime-triage.md`。
 - `notes/client-console-diagnosis.md`：浏览器客户端层的取证法（Console 只读探针、React fiber 取活状态、判定矩阵、插桩纪律）；已整理为 skill 分册 `skill/references/dogfood/client-console-diagnosis.md`。
 - `notes/resource-preview-protocol-bug.md`：文件/计划预览「不可用」的问题记录（现象 / 根因 / 解决方案；上游 issue 素材）。
 - mint plan / issue：计划与进度真源（本仓当前：milestone `0.1.0`；具体 plan 号以 `mint plan list` 为准，不在此处写死）。

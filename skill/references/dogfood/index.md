@@ -9,16 +9,14 @@
 
 | 主题                                                    | 页面                                             |
 | ------------------------------------------------------- | ------------------------------------------------ |
-| 环境搭建：装插件、profile 与层序、配置与重启            | 待填（`dogfood-setup.md`，plan #18）             |
-| 日志与运行时取证：日志在哪、怎么要到更多 debug 信息     | 待填（`runtime-evidence.md`，plan #18）          |
+| 环境搭建：装插件、profile 与层序、配置与重启            | `references/dogfood/dogfood-setup.md`            |
+| 日志与运行时取证：日志在哪、怎么要到更多 debug 信息     | `references/dogfood/runtime-evidence.md`         |
 | 成型流程：浏览器端 Console 只读探针、判定矩阵、插桩纪律 | `references/dogfood/client-console-diagnosis.md` |
-| 成型流程：运行时故障的低成本定位法（诊断顺序 + 反模式） | 待填（`runtime-triage.md`，plan #18）            |
-
-「待填」页命名：`references/dogfood/<slug>.md`。
+| 成型流程：运行时故障的低成本定位法（诊断顺序 + 反模式） | `references/dogfood/runtime-triage.md`           |
 
 ## 原则
 
 - **只读取证优先**：先读出运行中的真实状态，再决定改什么；改产物是最后手段。
-- 每条流程都要能直接执行、能复制结果；写完一条就沉淀一条（plan #18）。
+- 每条流程都要能直接执行、能复制结果；新增流程按「环境搭建 → 取证 → 定位」三页归位，不另开平行页。
 - **跨类引用**：定位流程可以直引 `references/dsh/architecture.md` 的某一节，或间接要求先读某个原理页。
   顺着这些引用走，不要凭记忆推断 dsh 行为。
