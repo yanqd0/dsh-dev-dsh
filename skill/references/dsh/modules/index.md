@@ -12,8 +12,8 @@
 
 ## 页契约
 
-- 命名：`references/dsh/modules/<group>.md`，`<group>` 取上游 `packages/<group>` 的组名（kebab-case）；一个组需要多页时用
-  `<group>-<语义>.md`，并在本索引逐页登记。
+- 命名：`references/dsh/modules/<group>.md`，`<group>` 取上游 `packages/<group>` 的组名（kebab-case）；一个组需要多页、
+  或两个组同属一个数据平面时用 `<group>-<语义>.md`，并在本索引逐页登记。
 - 每页六段：页头块（回链 + 范围 + pin + 上游权威）→ **包 / 对外提供**表 → **seam 与独占位** → **能替换 / 不能碰** →
   **易错点** → **源码最后手段**。
 - 「对外提供」表必须区分四种形态：**可挂载插件**、**抽象 Service Definition**（本身不能单独挂载，provider 才是行）、
@@ -24,25 +24,31 @@
   运行期插件管理 → `references/dsh/plugin-management.md`；客户端装载 → `references/dsh/client-loading.md`。
 - 每页一条 provenance pin；引用上游路径必须同步登记 `src/facts.test.ts`。
 
+## 已就位的模块页
+
+- `references/dsh/modules/kernel.md`：`packages/core` 主干服务（agents / sessions / tools / system-prompt / scope）。
+- `references/dsh/modules/model.md`：`packages/llm` 模型调用与适配器。
+- `references/dsh/modules/sessions.md`：`packages/session` 持久会话数据平面四族。
+- `references/dsh/modules/session-query-storage.md`：`packages/session-query` 查询 / 导出与 `packages/storage` 通用持久状态。
+
 ## 覆盖表（逐批推进）
 
 状态含义：**已就位**＝本册有页可按；**A/B 批**＝本 plan 交付并按页登记；**C–E 批**＝已排期、尚无页（不要按图索骥）。
 
-| 上游 group                                                                                                                                                                                                     | 页                                           | 状态               |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------ |
-| `core`                                                                                                                                                                                                         | `references/dsh/modules/` 下的 kernel        | A 批               |
-| `llm`                                                                                                                                                                                                          | `references/dsh/modules/` 下的 model         | A 批               |
-| `session`                                                                                                                                                                                                      | `references/dsh/modules/` 下的 sessions      | A 批               |
-| `session-query`                                                                                                                                                                                                | `references/dsh/modules/` 下的 session-query | A 批               |
-| `storage`                                                                                                                                                                                                      | `references/dsh/modules/` 下的 storage       | A 批               |
-| `boot` + `bundle` + `apps`                                                                                                                                                                                     | `references/dsh/modules/` 下的 boot-bundle   | B 批               |
-| `host`                                                                                                                                                                                                         | `references/dsh/modules/` 下的 host          | B 批               |
-| `api`                                                                                                                                                                                                          | `references/dsh/modules/` 下的 api           | B 批               |
-| `client`（+ `typert`）                                                                                                                                                                                         | `references/dsh/modules/` 下的 client        | B 批               |
-| `fs` `shell` `sandbox` `subprocess` `ssh` `terminal` `ptc-runtime` `mcp` `skill` `attachment` `spill` `lsp` `document` `web`                                                                                   | —                                            | C 批               |
-| `todo` `plan` `goal` `schedule` `subagent` `jobs` `workflow` `preset` `compaction` `context` `interaction` `feedback` `hooks` `webhook` `guard` `identity` `settings` `credentials` `telemetry` `deliverables` | —                                            | D 批               |
-| `util` `brand` `runtime-diagnostics` `test-support`                                                                                                                                                            | —                                            | E 批（按需）       |
-| `experimental/*`                                                                                                                                                                                               | —                                            | 按需（预稳定原型） |
+| 上游 group                                                                                                                                                                                                     | 页                                                | 状态        |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------- |
+| `core`                                                                                                                                                                                                         | `references/dsh/modules/kernel.md`                | 已就位（A） |
+| `llm`                                                                                                                                                                                                          | `references/dsh/modules/model.md`                 | 已就位（A） |
+| `session`                                                                                                                                                                                                      | `references/dsh/modules/sessions.md`              | 已就位（A） |
+| `session-query` + `storage`                                                                                                                                                                                    | `references/dsh/modules/session-query-storage.md` | 已就位（A） |
+| `boot` + `bundle` + `apps`                                                                                                                                                                                     | B 批                                              | 待建        |
+| `host`                                                                                                                                                                                                         | B 批                                              | 待建        |
+| `api`                                                                                                                                                                                                          | B 批                                              | 待建        |
+| `client`（+ `typert`）                                                                                                                                                                                         | B 批                                              | 待建        |
+| `fs` `shell` `sandbox` `subprocess` `ssh` `terminal` `ptc-runtime` `mcp` `skill` `attachment` `spill` `lsp` `document` `web`                                                                                   | C 批                                              | 待建        |
+| `todo` `plan` `goal` `schedule` `subagent` `jobs` `workflow` `preset` `compaction` `context` `interaction` `feedback` `hooks` `webhook` `guard` `identity` `settings` `credentials` `telemetry` `deliverables` | D 批                                              | 待建        |
+| `util` `brand` `runtime-diagnostics` `test-support`                                                                                                                                                            | E 批（按需）                                      | 待建        |
+| `experimental/*`                                                                                                                                                                                               | 按需（预稳定原型）                                | 待建        |
 
 ## 与其它页的分工
 

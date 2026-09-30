@@ -20,7 +20,7 @@
 | 持久化位      | 合并 `SessionEventMap` 新增会话事件类型                                                            | 新增类型默认 required-on-read：老构建读到必须拒绝整份日志               | `references/dsh/session-log.md` §6；`docs/persistence-catalog.zh.md`（生成）               |
 | 客户端位      | `package.json` 的 `dsh.client` + `exports["./client"]`；slot 注册                                  | slot 一个 declarer；同 id 同 priority 第二次注册抛错                    | `references/dsh/client-loading.md`；`packages/client/ui-slots/src/index.ts`                |
 | HTTP / Remote | `ctx.webServer` 注册路由（exact / prefix）或 index 注入；Typert `@Remote` 方法                     | 路由精确/前缀匹配、同路径冲突由注册顺序决定；唯一 fallback 座位只能一个 | `docs/subsystems/web-server.zh.md`；`docs/api-gateway.zh.md`                               |
-| 状态位        | settings / credentials 键；`ctx.storage` 域                                                        | 键名冲突按各注册表规则；域名单句柄                                      | `docs/subsystems/settings.zh.md`；`references/dsh/modules/` 下的 storage 页                |
+| 状态位        | settings / credentials 键；`ctx.storage` 域                                                        | 键名冲突按各注册表规则；域名单句柄                                      | `docs/subsystems/settings.zh.md`；`references/dsh/modules/session-query-storage.md`        |
 
 ## 2. 冲突语义速查（实现里已验证的错误串）
 
