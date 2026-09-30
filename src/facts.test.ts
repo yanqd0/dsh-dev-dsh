@@ -499,6 +499,12 @@ const facts: Fact[] = [
     note: '插件与配置的热替换',
   },
   {
+    id: 'cordis-api-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/cordis-api',
+    note: '生成的核心 API 参考：Context / events / Fiber 与继承层',
+  },
+  {
     id: 'dsh-architecture-doc',
     source: 'deepseek-harness@dsh-v0.2.0-rc.2',
     path: 'docs/architecture.zh.md',

@@ -7,10 +7,11 @@
 
 ## 阅读顺序
 
-1. `references/dsh/architecture.md`：架构主干（层、职责、主干流转、`ctx` 键、事件三域）。先读这页。
-2. `references/dsh/modules/index.md`：模块 / 子系统索引（外部功能与接口）。
-3. `references/dsh/plugins/index.md`：内置 plugin 索引（哪些位置已经被占了）。
-4. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
+1. `references/dsh/architecture.md`：架构主干（层、平面、依赖方向、主干流转）。先读这页。
+2. `references/dsh/plugin-model.md`：运行时原理（服务、事件、可逆副作用、生命周期）。
+3. `references/dsh/modules/index.md`：模块 / 子系统索引（外部功能与接口）。
+4. `references/dsh/plugins/index.md`：内置 plugin 索引（哪些位置已经被占了）。
+5. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
 
 ## 纪律
 
