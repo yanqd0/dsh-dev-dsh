@@ -19,9 +19,9 @@ running profile".
 They do not cover the out-of-tree engineering path, and the harness leaves that
 path to third parties by design: its own project-scaffolding toolchain was
 removed, its shared client build preset is not published, and the published
-`@deepseek-ai/dsh-*` dist-tags are stale (`0.0.1-rc.1`) against a `0.1.7-rc.2`
-runtime. An author therefore re-derives the same contracts and re-collects the
-same failure modes in every plugin repository.
+`@deepseek-ai/dsh-*` dist-tags were stale (`0.0.1-rc.1`) against the runtime of
+the time (`0.1.7-rc.2`). An author therefore re-derives the same contracts and
+re-collects the same failure modes in every plugin repository.
 
 This plugin closes that gap for its own plugin repositories first, then
 publishes. The reasoning and the evidence behind the scope are in
@@ -41,25 +41,24 @@ the `mint` tool in this project. The release mechanics are in
 - Ship the out-of-tree DSH authoring method as a **lazy-loaded manual**: a thin
   `SKILL.md` entry plus per-category reference trees, so an agent can develop a
   plugin and diagnose it without reading dsh source.
-- Content baseline is the dsh version the runtime actually carries
-  (`0.2.0-rc.1`); the references pinned to the earlier `0.1.7-rc.2` are being
-  re-verified as part of that move.
+- Content baseline is the dsh version the runtime actually carries; the current
+  baseline is declared once, in the manual's version page. The manual's top
+  layer — layered architecture, plugin model, extension points, design
+  principles, the concept model and the domain vocabulary — is this milestone's
+  core; per-module and per-built-in-plugin pages, per-category development
+  flows, the dogfood flows, and the reverse CHANGELOG from the previous baseline
+  follow under the same milestone.
 - Install that skill as part of `dsh plugin add`, so the knowledge arrives with
   the plugin instead of being copied by hand.
 - Publish the first version to npm.
 
-**0.2.0+ — the full manual, plugin categories and dsh drift**
+**0.2.0+ — client/UI plugin categories and contract checks**
 
-- Fill the three categories: per-class plugin development flows, the dsh
-  module / built-in-plugin / version knowledge base, and the dogfood &
-  diagnosis flows.
-- Record a reverse CHANGELOG for `0.1.7-rc.2 → 0.2.0-rc.1`, so a historical
-  plugin's breakage and upgrade path are known before they are rediscovered.
-- Add static checks for the out-of-tree package contract, with rules keyed by
-  dsh version.
-
-Later versions follow the upstream release cadence rather than a fixed
-schedule.
+- Extend the manual to the classes that need the unpublished client build path
+  (web UI / client plugins), and add static checks for the out-of-tree package
+  contract, with rules keyed by dsh version.
+- Later versions follow the upstream release cadence rather than a fixed
+  schedule.
 
 ## Layout
 

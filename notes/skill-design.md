@@ -49,10 +49,14 @@
 ## 4. 版本维度
 
 - **主干跨版本稳定**：架构页、契约页写层次与主干流转，不写会随版本改写的清单；清单进版本页。
-- **内容页声明 pin**：每个**内容页**（`references/**` 下非 `index.md` 的页）在正文头部给出 `deepseek-harness@dsh-vX.Y.Z[-rc.N]`；本仓当前基准 `dsh-v0.2.0-rc.1`（与本机运行时一致）。索引页只做导航、不承载事实，不要求 pin。
-- **版本页**：`references/dsh/versions/index.md` 列支持窗口与差分页命名 `references/dsh/versions/<from>-to-<to>.md`（回链本索引），形态是**反 CHANGELOG**：讲清从哪版到哪版、什么被改/删、历史插件为什么坏、升级要改什么。
+- **内容页声明 pin**：每个**内容页**（`references/**` 下非 `index.md` 的页）在正文头部给出 `deepseek-harness@dsh-vX.Y.Z[-rc.N]`；本仓当前基准在 `references/dsh/versions/index.md` 声明（全仓唯一一处，见 §4.1）。pin 只记**出处**，不是基准声明。索引页只做导航、不承载事实，不要求 pin。
+- **版本页**：`references/dsh/versions/index.md` 列支持窗口与差分页命名 `references/dsh/versions/<from>-to-<to>.md`（回链本索引），形态是**反 CHANGELOG**：讲清从哪版到哪版、什么被改/删、历史插件为什么坏、升级要改什么。文件名必须满足 §3 的 kebab-case（点号非法），版本串写成 `0-1-7-rc-2-to-0-2-0-rc-1.md` 这种形式。
 - **不复制整页**：多版本共存时不复制成多份页面，只在受影响页加「版本差异」小节并指向版本页。
 - **事实台账**：`skill/**` 每引用一条上游事实，必须在 `src/facts.test.ts` 登记一条 fact（`source` / `path` / 可选 `line` / `note`），反之亦然。
+
+### 4.1 当前基准的唯一出处
+
+基准会持续演进，所以**只在 `references/dsh/versions/index.md` 声明「当前基准」**；其它页只保留一条 provenance pin，不写「当前基准」「与本机运行时一致」这类叙述（`src/facts.test.ts` 有门禁）。这样升级基准时只有一处需要改判定，其余页面只更新 pin。
 
 ## 5. 演进步骤
 
@@ -79,14 +83,29 @@
 
 ## 8. 与各 plan 的边界
 
-| plan                | 职责                                                                              | 状态         |
-| ------------------- | --------------------------------------------------------------------------------- | ------------ |
-| #2                  | 宿主面正文与既有 4 分册；不重开、不重写                                           | done         |
-| #5                  | 结构契约、L0 定稿、二级骨架与占位（本文的来源）                                   | 执行中       |
-| #6                  | dsh 0.1.7 内容填充（历史版本线）                                                  | open，不变   |
-| #7                  | 0.1.5 基线、0.1.5→0.1.7 差分与升级适配                                            | open，不变   |
-| 0.2.0 外置手册 plan | 三大类全量内容、4 分册重校到 `0.2.0-rc.1`、反 CHANGELOG `0.1.7-rc.2 → 0.2.0-rc.1` | 新建，下一步 |
+| plan | 职责                                                                              | 状态        |
+| ---- | --------------------------------------------------------------------------------- | ----------- |
+| #2   | 宿主面正文与既有 4 分册；不重开、不重写                                           | done        |
+| #5   | 结构契约、L0 定稿、二级骨架与占位（本文的来源）                                   | done        |
+| #6   | dsh 0.1.7 内容填充（历史版本线）                                                  | open，不变  |
+| #7   | 0.1.5 基线、0.1.5→0.1.7 差分与升级适配                                            | open，不变  |
+| #13  | 手册顶层：6 页（分层架构 / 插件模型 / 扩展点 / 设计原理 / 概念模型 / 领域词汇）+ 索引与版本页 | 执行中      |
+| #14  | 组装与启动链路原理（profile / bundle / patch / loader / plugin-manager / 客户端装载） | open，待启动 |
+| #15  | 会话与持久化原理（日志 / 格式版本与迁移 / 投影 / 后端）                            | open，待启动 |
+| #16  | 模块与内置 plugin 索引填充                                                        | open，待启动 |
+| #17  | 插件分类开发流程（8 类）                                                          | open，待启动 |
+| #18  | dogfood 环境与取证流程                                                           | open，待启动 |
+| #19  | dsh 版本差分与分册重校                                                            | open，待启动 |
+
+plan 号以 `mint plan list` 为准，上表只固定职责边界。
 
 ## 9. 源码指针写法
 
 兜底指针统一写成 `deepseek-harness@dsh-v<tag>` + `path`（可带 `:line`），同段注明用途与「最后手段，默认不读」。指针里的路径同样是 fact：登记进 `src/facts.test.ts`。
+
+## 10. 术语与语言纪律（plan #13 起）
+
+- **术语用英文原词**：dsh 与 DDD 的领域概念（bounded context、aggregate、capability seam、scope、projection、waterfall…）正文里一律写英文原词，不另造中文译名；正文叙述仍以中文为主。
+- **中英对照只有一处**：术语的英文 ↔ 中文对照表只在 `references/dsh/concept-model.md` 维护（English 列在前）。
+- **官方定义只路由**：官方术语的权威定义在 `docs/glossary.zh.md` 与 `docs/i18n/terminology.md`，手册用 `references/dsh/domain-vocabulary.md` 做索引与路由，不整段照抄。
+- **机器门禁**：`src/facts.test.ts` 断言概念页含中英对照表头（`English` + `中文`），并断言除 `references/dsh/versions/index.md` 外无「当前基准」类叙述（§4.1）。
