@@ -12,9 +12,10 @@
 3. `references/dsh/extension-points.md`：扩展点判据（事件域、capability seam、scope）。
 4. `references/dsh/design-principles.md`：不变式与设计准则（写码时不能违反什么）。
 5. `references/dsh/concept-model.md`：概念模型（DDD 映射 + 中英对照 + 关系图）。
-6. `references/dsh/modules/index.md`：模块 / 子系统索引（外部功能与接口）。
-7. `references/dsh/plugins/index.md`：内置 plugin 索引（哪些位置已经被占了）。
-8. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
+6. `references/dsh/domain-vocabulary.md`：官方术语索引（权威在哪、按域分组、相互关系）。
+7. `references/dsh/modules/index.md`：模块 / 子系统索引（外部功能与接口）。
+8. `references/dsh/plugins/index.md`：内置 plugin 索引（哪些位置已经被占了）。
+9. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
 
 ## 纪律
 
