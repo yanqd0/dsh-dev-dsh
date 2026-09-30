@@ -1,10 +1,10 @@
 # dsh 内置 plugin 索引（占位）
 
-> 占位｜归属：dsh 本体｜填充：plan #13
+> 占位｜归属：dsh 本体｜填充：plan #16
 >
 > 本文是 `references/dsh/index.md` 的子页。
 
-**事实 pin**：`deepseek-harness@dsh-v0.2.0-rc.1`（本册逐页填充时按页重声明）。
+**事实 pin**：`deepseek-harness@dsh-v0.2.0-rc.2`（本册逐页填充时按页重声明）。
 
 本册回答：「dsh 已经内置了哪些插件、各自负责什么」——写新插件前先确认这块位置有没有被占，
 既避免重复造轮子，也避免与内置行为打架。
@@ -19,4 +19,4 @@
 ## 与「新行为该放哪」的关系
 
 放新行为前先在这里查两件事：能力是否已存在（该挂上去而不是重写）、以及谁拥有这个行为
-（见 `references/dsh/architecture.md` §7）。
+（见 `references/dsh/extension-points.md` §4 的判定表）。
