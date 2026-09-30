@@ -19,11 +19,11 @@ dsh 的一切都是插件，但**不同分类的插件是完全不同的活**：
 | 新增工具（tool）      | `ctx.tools` 注册 + 模型可见 schema                | 一个 `defineTool` 插件 | `references/develop/tool-plugins.md`             |
 | 外围扩展（能力 seam） | 既有服务与事件（`fs/*`、`tools/*`、`llm/*`…）     | 策略、适配器、守卫     | `references/develop/peripheral-extensions.md`    |
 | harness 核心替换      | 替换核心服务或驱动器（如 agent loop、模型适配器） | 与官方同权的替代实现   | `references/develop/harness-core-replacement.md` |
-| web UI / 客户端插件   | 客户端 bundle + 插槽 / 路由                       | 面板、卡片、页面       | 待填                                             |
+| web UI / 客户端插件   | 客户端 bundle + 插槽 / 路由                       | 面板、卡片、页面       | `references/develop/web-ui-plugins.md`           |
 | skill 型插件          | 随包分发知识并按需安装同步                        | 知识包 + 同步逻辑      | `references/develop/skill-plugins.md`            |
-| preset / 组合包       | `dsh.profile`、`dsh.bundle`                       | 一组插件的装配         | 待填                                             |
-| MCP                   | 外部 MCP 服务接入                                 | 工具 / 资源桥          | 待填                                             |
-| hooks / 桥接          | 其它 agent 的桥接事件                             | 转译层                 | 待填                                             |
+| preset / 组合包       | `dsh.profile`、`dsh.bundle`                       | 一组插件的装配         | `references/develop/preset-and-composition.md`   |
+| MCP                   | 外部 MCP 服务接入                                 | 工具 / 资源桥          | `references/develop/mcp-integration.md`          |
+| hooks / 桥接          | 其它 agent 的桥接事件                             | 转译层                 | `references/develop/hook-bridges.md`             |
 
 「待填」由 plan #17 填充：每类一页，命名 `references/develop/<分类>.md`，含该类流程、最小示例与失败面。
 
