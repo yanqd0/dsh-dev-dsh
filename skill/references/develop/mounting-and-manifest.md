@@ -1,9 +1,11 @@
 # 挂载与清单：patch 语义、层序、包清单字段
 
 本文是 `references/develop/index.md` 的子页，回答「仓外插件怎么被挂上去、清单哪些字段真正起作用」。
-每条结论后括号内是快照 `deepseek-harness@dsh-v0.1.7-rc.2` 里的出处；行号随版本漂移，
+每条结论后括号内是快照 `deepseek-harness@dsh-v0.2.0-rc.2` 里的出处；行号随版本漂移，
 `src/facts.test.ts` 会在 `3rdp/` 存在时逐条复核。官方完整叙述见
 `docs/user/develop/basic/publish.zh.md`，本文只补它没写透的失败面。
+机制与启动链路（层序怎么叠、loader 怎么装载、激活与失败怎么判定）见
+`references/dsh/composition-and-boot.md`；运行期安装与 reconcile 见 `references/dsh/plugin-management.md`。
 
 ## 1. 两种 manifest，不要混
 
@@ -26,7 +28,7 @@
 - `patch` 不是字符串或字符串数组时抛
   `dsh.bundle.patch must be a file path or a list of file paths`
   （`packages/boot/app-boot/src/profile.ts:58`）。
-- 多个 patch 文件按数组顺序作为**同一层**应用（`packages/boot/app-boot/src/profile.ts:654`）。
+- 多个 patch 文件按数组顺序作为**同一层**应用（`packages/boot/app-boot/src/profile.ts:677`）。
 
 ## 3. patch 语义：`insert:` 追加，裸条目覆盖
 
@@ -39,7 +41,7 @@
 - **不带 `insert:`**：必须有 `id`，否则警告 `patch: id is required for non-insert patches` 并跳过
   （`vendor/include/src/index.ts:105`）。命中行后按字段逐个赋值 `target[key] = value`，
   所以 `config` 是**整体替换**，不是深合并；`name` 是断言而非改名，不一致时警告
-  `patch: name mismatch for %C (expected %C, got %C), skipping`（`vendor/include/src/index.ts:111`、`:116`）。
+  `patch: name mismatch for %C (expected %C, got %C), skipping`（`vendor/include/src/index.ts:120`、`:116`）。
 - 所有命中失败都以 `patch: entry %C not found` 形式出现（如 `patch: entry "dsh-dev-dsh" not found`），
   由 loader logger 渲染 `%C` 为带引号的 id（`vendor/include/src/index.ts:241`）。
 
