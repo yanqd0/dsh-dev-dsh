@@ -74,6 +74,7 @@ flowchart TB
 | 自扩展与实验     | `packages/extensions/cordis-host-runner`                                                                                                                                                                                                                                                                                                                                                                                                                                                | 运行时动态 Cordis 插件的 Host 侧执行；其余的预稳定原型不在这里列举                                                     |
 
 包名单与一行职责的权威是上游 `packages/README.md`；包之间的 peer 依赖图是 `docs/module-graph.zh.md`（本页不复制）。
+逐组对外契约（`ctx` 键、seam、可替换点与易错点）见 `references/dsh/modules/index.md`；某个能力位置是否已被占见 `references/dsh/plugins/index.md`。
 
 ## 3. 平面与边界
 

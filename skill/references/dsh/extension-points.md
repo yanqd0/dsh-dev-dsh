@@ -83,6 +83,8 @@
 
 （上游同一张表的完整版本：`docs/architecture.zh.md` 末尾「新行为的归属位置」。）
 
+某个位置是否已被内置插件占、以及重复注册会怎么失败，见 `references/dsh/plugins/index.md`；逐组的 `ctx` 键与 seam 见 `references/dsh/modules/index.md`。
+
 ## 5. 纪律
 
 - 新行为挂在**已文档化**的扩展点上；不改核心、不靠 façade 或监听顺序硬凑（见

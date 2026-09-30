@@ -30,6 +30,10 @@
 - `references/dsh/modules/model.md`：`packages/llm` 模型调用与适配器。
 - `references/dsh/modules/sessions.md`：`packages/session` 持久会话数据平面四族。
 - `references/dsh/modules/session-query-storage.md`：`packages/session-query` 查询 / 导出与 `packages/storage` 通用持久状态。
+- `references/dsh/modules/boot-bundle.md`：`packages/boot` + `packages/bundle` + `apps/` 的启动、装配与启动器。
+- `references/dsh/modules/host.md`：`packages/host` 的 HTTP 路由、目录选择 seam 与插件清单。
+- `references/dsh/modules/api.md`：`packages/api` 的 Remote 声明、命名空间与转发白名单。
+- `references/dsh/modules/client.md`：`packages/client` 浏览器半边（+ `packages/typert` 类型面）。
 
 ## 覆盖表（逐批推进）
 
@@ -41,10 +45,10 @@
 | `llm`                                                                                                                                                                                                          | `references/dsh/modules/model.md`                 | 已就位（A） |
 | `session`                                                                                                                                                                                                      | `references/dsh/modules/sessions.md`              | 已就位（A） |
 | `session-query` + `storage`                                                                                                                                                                                    | `references/dsh/modules/session-query-storage.md` | 已就位（A） |
-| `boot` + `bundle` + `apps`                                                                                                                                                                                     | B 批                                              | 待建        |
-| `host`                                                                                                                                                                                                         | B 批                                              | 待建        |
-| `api`                                                                                                                                                                                                          | B 批                                              | 待建        |
-| `client`（+ `typert`）                                                                                                                                                                                         | B 批                                              | 待建        |
+| `boot` + `bundle` + `apps`                                                                                                                                                                                     | `references/dsh/modules/boot-bundle.md`           | 已就位（B） |
+| `host`                                                                                                                                                                                                         | `references/dsh/modules/host.md`                  | 已就位（B） |
+| `api`                                                                                                                                                                                                          | `references/dsh/modules/api.md`                   | 已就位（B） |
+| `client`（+ `typert`）                                                                                                                                                                                         | `references/dsh/modules/client.md`                | 已就位（B） |
 | `fs` `shell` `sandbox` `subprocess` `ssh` `terminal` `ptc-runtime` `mcp` `skill` `attachment` `spill` `lsp` `document` `web`                                                                                   | C 批                                              | 待建        |
 | `todo` `plan` `goal` `schedule` `subagent` `jobs` `workflow` `preset` `compaction` `context` `interaction` `feedback` `hooks` `webhook` `guard` `identity` `settings` `credentials` `telemetry` `deliverables` | D 批                                              | 待建        |
 | `util` `brand` `runtime-diagnostics` `test-support`                                                                                                                                                            | E 批（按需）                                      | 待建        |
