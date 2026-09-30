@@ -547,6 +547,12 @@ const facts: Fact[] = [
     note: '测试与门禁策略：源码面解析、覆盖率门禁与快照要求',
   },
   {
+    id: 'i18n-terminology-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/i18n/terminology.md',
+    note: '官方中英译法表：领域术语的规范中文对应',
+  },
+  {
     id: 'dsh-architecture-doc',
     source: 'deepseek-harness@dsh-v0.2.0-rc.2',
     path: 'docs/architecture.zh.md',

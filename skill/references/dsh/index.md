@@ -11,9 +11,10 @@
 2. `references/dsh/plugin-model.md`：运行时原理（服务、事件、可逆副作用、生命周期）。
 3. `references/dsh/extension-points.md`：扩展点判据（事件域、capability seam、scope）。
 4. `references/dsh/design-principles.md`：不变式与设计准则（写码时不能违反什么）。
-5. `references/dsh/modules/index.md`：模块 / 子系统索引（外部功能与接口）。
-6. `references/dsh/plugins/index.md`：内置 plugin 索引（哪些位置已经被占了）。
-7. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
+5. `references/dsh/concept-model.md`：概念模型（DDD 映射 + 中英对照 + 关系图）。
+6. `references/dsh/modules/index.md`：模块 / 子系统索引（外部功能与接口）。
+7. `references/dsh/plugins/index.md`：内置 plugin 索引（哪些位置已经被占了）。
+8. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
 
 ## 纪律
 
