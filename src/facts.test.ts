@@ -523,6 +523,30 @@ const facts: Fact[] = [
     note: '作用域注册标识、dispatch 载体与 Scope 上下文',
   },
   {
+    id: 'upstream-root-agents',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'AGENTS.md',
+    note: '上游仓库根常驻规则：注册即 effect、model-visible ⟺ logged、fail loud、显式 > 隐式、边界校验、branded id、source/artifact plane',
+  },
+  {
+    id: 'defensive-patterns-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/defensive-patterns.zh.md',
+    note: '生命周期、并发、子进程与 teardown 的防御性写法',
+  },
+  {
+    id: 'session-format-status-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/session-format-status.zh.md',
+    note: '会话格式的版本 / 状态权威与支持窗口',
+  },
+  {
+    id: 'testing-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/testing.zh.md',
+    note: '测试与门禁策略：源码面解析、覆盖率门禁与快照要求',
+  },
+  {
     id: 'dsh-architecture-doc',
     source: 'deepseek-harness@dsh-v0.2.0-rc.2',
     path: 'docs/architecture.zh.md',
