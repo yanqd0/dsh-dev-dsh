@@ -20,22 +20,22 @@ dsh 不是 DDD 框架，但它的构造方式与 DDD 的关注点高度重合：
 
 ## 2. 术语对照表
 
-| English（主）              | 中文         | dsh 对应物                                                                                                        |
-| -------------------------- | ------------ | ----------------------------------------------------------------------------------------------------------------- |
-| bounded context            | 界限上下文   | host 运行时 / 浏览器客户端运行时 / SDK 进程 / 桌面载体；边界由进程、wire 与 compiler face 固定（`references/dsh/architecture.md` §3） |
-| ubiquitous language        | 通用语言     | `docs/glossary.zh.md` 与 `docs/i18n/terminology.md` 的术语集；本手册只索引、不改写                                  |
-| aggregate (root)           | 聚合（根）   | **Session 日志**（一致性边界：只能追加）；`AgentHandle`（活跃工作的所有者）                                        |
-| entity                     | 实体         | `Session`、`Agent`、`Attachment`、`Job`、`Workspace`                                                              |
-| value object               | 值对象       | `Message`、`SessionEvent` 载荷、`ToolResult`、branded id、`Config` 取值                                            |
-| domain event               | 领域事件     | `SessionEventMap` 里的持久事件（可回放）；`agent/*` 是进程内实时信号，**不是**持久事实                             |
-| integration / published event | 集成事件  | 跨上下文的那部分：`session/event` 广播、SDK / ACP / webhook 的对外载荷                                             |
-| repository                 | 仓储         | `SessionPersistence` seam、storage hub（按 id 取 / 存聚合）                                                        |
-| domain service             | 领域服务     | 工具执行流水线、agent loop、system-prompt 组装、compaction                                                         |
-| policy / specification     | 策略 / 规约  | guard、sandbox 策略、approval、permission preset、`tools.restrict`                                                 |
-| anti-corruption layer      | 防腐层       | LLM adapter、MCP client、hooks bridge、SDK / ACP gateway、Typert remote                                            |
-| application service        | 应用服务     | `ctx.commands` 的处理器、boot 与 profile 组装、plugin-manager                                                      |
-| published language         | 发布语言     | 会话格式 `vN`、tool schema、wire protocol、Typert remote 声明                                                      |
-| module                     | 模块         | package group 与服务所有权：一个包管一个关注点，边界靠 seam 而不是 import                                          |
+| English（主）                 | 中文        | dsh 对应物                                                                                                                            |
+| ----------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| bounded context               | 界限上下文  | host 运行时 / 浏览器客户端运行时 / SDK 进程 / 桌面载体；边界由进程、wire 与 compiler face 固定（`references/dsh/architecture.md` §3） |
+| ubiquitous language           | 通用语言    | `docs/glossary.zh.md` 与 `docs/i18n/terminology.md` 的术语集；本手册只索引、不改写                                                    |
+| aggregate (root)              | 聚合（根）  | **Session 日志**（一致性边界：只能追加）；`AgentHandle`（活跃工作的所有者）                                                           |
+| entity                        | 实体        | `Session`、`Agent`、`Attachment`、`Job`、`Workspace`                                                                                  |
+| value object                  | 值对象      | `Message`、`SessionEvent` 载荷、`ToolResult`、branded id、`Config` 取值                                                               |
+| domain event                  | 领域事件    | `SessionEventMap` 里的持久事件（可回放）；`agent/*` 是进程内实时信号，**不是**持久事实                                                |
+| integration / published event | 集成事件    | 跨上下文的那部分：`session/event` 广播、SDK / ACP / webhook 的对外载荷                                                                |
+| repository                    | 仓储        | `SessionPersistence` seam、storage hub（按 id 取 / 存聚合）                                                                           |
+| domain service                | 领域服务    | 工具执行流水线、agent loop、system-prompt 组装、compaction                                                                            |
+| policy / specification        | 策略 / 规约 | guard、sandbox 策略、approval、permission preset、`tools.restrict`                                                                    |
+| anti-corruption layer         | 防腐层      | LLM adapter、MCP client、hooks bridge、SDK / ACP gateway、Typert remote                                                               |
+| application service           | 应用服务    | `ctx.commands` 的处理器、boot 与 profile 组装、plugin-manager                                                                         |
+| published language            | 发布语言    | 会话格式 `vN`、tool schema、wire protocol、Typert remote 声明                                                                         |
+| module                        | 模块        | package group 与服务所有权：一个包管一个关注点，边界靠 seam 而不是 import                                                             |
 
 **dsh 有而 DDD 没有直接对应词的概念**（属于本手册自己的分类，不硬塞进上表）：
 

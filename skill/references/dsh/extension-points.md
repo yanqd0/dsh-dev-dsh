@@ -12,11 +12,11 @@
 
 事件就是扩展点，**选对事件域是大多数改动的第一个决定**：
 
-| 域             | 例子                                                        | 什么时候用                                                                 |
-| -------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 会话事件       | `turn/*`、`step/*`、`system/message`、`user/message`、`assistant/message`、`tool/*` | 事实必须跨重载存在时。它们追加进会话日志并经 `session/event` 广播           |
-| Agent 事件     | `agent/pre-step`、`agent/request`、`agent/turn-stopping`、`agent/created` | 要观察或拦截**进行中**的工作时使用；带活跃 `Agent`，进程内实时              |
-| 能力事件       | `fs/*`、`tools/*`、`llm/*`、`telemetry/*`                    | 给某个 seam 追加策略或适配器，又不想引入 import 环时使用                    |
+| 域         | 例子                                                                                | 什么时候用                                                        |
+| ---------- | ----------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| 会话事件   | `turn/*`、`step/*`、`system/message`、`user/message`、`assistant/message`、`tool/*` | 事实必须跨重载存在时。它们追加进会话日志并经 `session/event` 广播 |
+| Agent 事件 | `agent/pre-step`、`agent/request`、`agent/turn-stopping`、`agent/created`           | 要观察或拦截**进行中**的工作时使用；带活跃 `Agent`，进程内实时    |
+| 能力事件   | `fs/*`、`tools/*`、`llm/*`、`telemetry/*`                                           | 给某个 seam 追加策略或适配器，又不想引入 import 环时使用          |
 
 - 持久 vs 实时：只有会话事件进日志；能不能跨 reload 存活，是第一个筛子。
 - 分发模式（`waterfall` 必须调 `next()`、`serial` 没有 `next()`）见 `references/dsh/plugin-model.md` §2。
@@ -63,22 +63,22 @@
 
 先决定事件域（§1），再决定归属的插件或服务，最后证明可回收。常用映射：
 
-| 目标                                 | 机制                                                                     |
-| ------------------------------------ | ------------------------------------------------------------------------ |
-| 添加模型提供方                       | 在 `ctx.llm` 上注册适配器                                                |
-| 添加面向模型的能力                   | 在 `ctx.tools` 上注册；schema 进入提示词组装                             |
-| 拦截请求、工具或轮次                 | 用相应的 `agent/*` 或 `tools/*` 事件；`agent/turn-stopping` 结束轮次      |
-| 让某个会话拥有不同的能力集合         | 组装 agent preset；其中的服务行需要 `isolate` realm                      |
+| 目标                                    | 机制                                                                              |
+| --------------------------------------- | --------------------------------------------------------------------------------- |
+| 添加模型提供方                          | 在 `ctx.llm` 上注册适配器                                                         |
+| 添加面向模型的能力                      | 在 `ctx.tools` 上注册；schema 进入提示词组装                                      |
+| 拦截请求、工具或轮次                    | 用相应的 `agent/*` 或 `tools/*` 事件；`agent/turn-stopping` 结束轮次              |
+| 让某个会话拥有不同的能力集合            | 组装 agent preset；其中的服务行需要 `isolate` realm                               |
 | 添加 shell / 终端 / 文件系统 / 沙箱后端 | 注册对应的 seam provider（`ctx.shell`、`ctx.terminals`、`ctx.fs`、`ctx.sandbox`） |
-| 添加用户命令                         | 在 `ctx.commands` 上注册；无需模型轮次即可分派                           |
-| 管理后台任务                         | 在 `ctx.jobs` 上注册；`job_*` 工具读取或停止                             |
-| 从外部 webhook 启动会话              | 在 `ctx.webhookRuntime` 上注册可信规则，并挂载提供方适配器                |
-| 添加模型可见上下文                   | 调用 `agent.inject()`；它落到下一次获准的请求                             |
-| 添加 UI 或编辑器集成                 | 驱动 `ctx.agents`，并从 `session/event` 渲染                              |
-| 添加持久会话状态                     | 扩展 `SessionEventMap`；从日志渲染和回放                                  |
-| 生成会话标题 / 管理同会话目标        | 注册唯一的 `ctx.sessionTitle` 提供方 / 使用 `ctx.goals`                    |
-| 在新后端存储会话                     | 基于共享的句柄脚手架实现 `SessionPersistence`                             |
-| 把注册限定到单个 agent               | 使用该 agent 的 `agent.ctx`                                               |
+| 添加用户命令                            | 在 `ctx.commands` 上注册；无需模型轮次即可分派                                    |
+| 管理后台任务                            | 在 `ctx.jobs` 上注册；`job_*` 工具读取或停止                                      |
+| 从外部 webhook 启动会话                 | 在 `ctx.webhookRuntime` 上注册可信规则，并挂载提供方适配器                        |
+| 添加模型可见上下文                      | 调用 `agent.inject()`；它落到下一次获准的请求                                     |
+| 添加 UI 或编辑器集成                    | 驱动 `ctx.agents`，并从 `session/event` 渲染                                      |
+| 添加持久会话状态                        | 扩展 `SessionEventMap`；从日志渲染和回放                                          |
+| 生成会话标题 / 管理同会话目标           | 注册唯一的 `ctx.sessionTitle` 提供方 / 使用 `ctx.goals`                           |
+| 在新后端存储会话                        | 基于共享的句柄脚手架实现 `SessionPersistence`                                     |
+| 把注册限定到单个 agent                  | 使用该 agent 的 `agent.ctx`                                                       |
 
 （上游同一张表的完整版本：`docs/architecture.zh.md` 末尾「新行为的归属位置」。）
 

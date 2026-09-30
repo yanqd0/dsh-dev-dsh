@@ -16,7 +16,7 @@
   settlement 派生，实时 UI 增量另走进程本地事件。
 - **投影必需**：`ctx.sessionProjections` 是 host 读取方的必需 seam——消费方要么在激活时要求它，
   要么在注册表或必需 key 缺席时明确失败；贡献方不得为缺失的 host 值静默提供默认值。
-- **持久事件按读方校验**：`SessionEventMap` 成员默认 *required-on-read*——不认识该事件的构建会拒绝这份日志，
+- **持久事件按读方校验**：`SessionEventMap` 成员默认 _required-on-read_——不认识该事件的构建会拒绝这份日志，
   除非事件在信封上标了 `ignorable: true`。`SESSION_FORMAT_VERSION` 只在**结构**发生变化时 bump。
 
 ## 2. 注册、所有权与回收
