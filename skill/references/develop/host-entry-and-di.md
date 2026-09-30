@@ -1,7 +1,7 @@
 # 宿主入口与 DI：导出形态、Config 校验、工具注册、事件
 
 本文是 `references/develop/index.md` 的子页，回答「仓外宿主插件怎么写入口、怎么声明依赖、注册什么会失败」。
-出处均相对快照 `deepseek-harness@dsh-v0.1.7-rc.2`；行号会漂移，由 `src/facts.test.ts` 复核。
+出处均相对快照 `deepseek-harness@dsh-v0.2.0-rc.2`；行号会漂移，由 `src/facts.test.ts` 复核。
 
 ## 1. 两种导出形态，混用会静默丢字段
 

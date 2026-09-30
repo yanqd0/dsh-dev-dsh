@@ -1,7 +1,7 @@
 # 构建、发布与踩坑：仓外仓库的工程面
 
 本文是 `references/develop/index.md` 的子页，回答「仓外插件仓库怎么构建、怎么发布、报错怎么归因」。
-出处在快照 `deepseek-harness@dsh-v0.1.7-rc.2`；行号由 `src/facts.test.ts` 复核。
+出处在快照 `deepseek-harness@dsh-v0.2.0-rc.2`；行号由 `src/facts.test.ts` 复核。
 
 ## 1. 模块形态
 
@@ -48,18 +48,18 @@ allowBuilds in <profileDir>/pnpm-workspace.yaml, then re-run`
 
 ## 4. 失败串 → 成因 → 修法
 
-| 观察到的串                                                                                           | 成因                                               | 修法                                                   |
-| ---------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------ |
-| `patch: entry "<id>" not found`                                                                      | 新挂载写成了裸 `- id/name`（覆盖语义），或 id 拼错 | 用 `- insert: [...]` 包裹                              |
-| `patch: id is required for non-insert patches`                                                       | 没有 `insert:` 也没写 `id`                         | 补 `insert:` 或 `id`                                   |
-| `patch insert: entry "<id>" is not a group`                                                          | 对非 group 行做嵌套 insert                         | 改为顶层插入                                           |
-| `invalid config:` … `(at <path>)`                                                                    | `Config` 校验失败（含必填字段缺省）                | 在 patch 的 `config` 里写全必填项                      |
-| `dsh: failed to read overlay <file>`                                                                 | patch 文件没进 npm `files`，或路径写错             | 把 patch 加进 `files`                                  |
-| `dsh.bundle.patch must be a file path or a list of file paths`                                       | `patch` 类型不对                                   | 改成字符串或字符串数组                                 |
-| `dsh: warning: <name> declares no dsh.bundle — installed as a plain dependency, not a profile layer` | 包没声明 `dsh.bundle`                              | 补 `dsh.bundle.patch`（见 `mounting-and-manifest.md`） |
-| `ERR_PNPM_IGNORED_BUILDS` / `Ignored build scripts`                                                  | 构建脚本未授权                                     | 在 profile 的 `allowBuilds` 放行                       |
-| `Plugin <name>@<version> is incompatible with dsh <runtime>`                                         | peer 版本门禁                                      | 对齐 peer 范围，或按提示申请精确版本豁免               |
-| `duplicate loader entry id`                                                                          | **0.1.7-rc.2 不会出现**（旧笔记遗留）              | 同 id 是 last-wins 静默覆盖，改掉重复来源              |
+| 观察到的串                                                                                           | 成因                                                | 修法                                                   |
+| ---------------------------------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------ |
+| `patch: entry "<id>" not found`                                                                      | 新挂载写成了裸 `- id/name`（覆盖语义），或 id 拼错  | 用 `- insert: [...]` 包裹                              |
+| `patch: id is required for non-insert patches`                                                       | 没有 `insert:` 也没写 `id`                          | 补 `insert:` 或 `id`                                   |
+| `patch insert: entry "<id>" is not a group`                                                          | 对非 group 行做嵌套 insert                          | 改为顶层插入                                           |
+| `invalid config:` … `(at <path>)`                                                                    | `Config` 校验失败（含必填字段缺省）                 | 在 patch 的 `config` 里写全必填项                      |
+| `dsh: failed to read overlay <file>`                                                                 | patch 文件没进 npm `files`，或路径写错              | 把 patch 加进 `files`                                  |
+| `dsh.bundle.patch must be a file path or a list of file paths`                                       | `patch` 类型不对                                    | 改成字符串或字符串数组                                 |
+| `dsh: warning: <name> declares no dsh.bundle — installed as a plain dependency, not a profile layer` | 包没声明 `dsh.bundle`                               | 补 `dsh.bundle.patch`（见 `mounting-and-manifest.md`） |
+| `ERR_PNPM_IGNORED_BUILDS` / `Ignored build scripts`                                                  | 构建脚本未授权                                      | 在 profile 的 `allowBuilds` 放行                       |
+| `Plugin <name>@<version> is incompatible with dsh <runtime>`                                         | peer 版本门禁                                       | 对齐 peer 范围，或按提示申请精确版本豁免               |
+| `duplicate loader entry id`                                                                          | **0.1.7-rc.2 与 0.2.0-rc.2 均不出现**（旧笔记遗留） | 同 id 是 last-wins 静默覆盖，改掉重复来源              |
 
 ## 5. 本仓已验证的两个可复用模式
 

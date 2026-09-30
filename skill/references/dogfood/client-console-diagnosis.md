@@ -4,7 +4,7 @@
 不手改安装树，就把**运行中的真实状态**读出来」。方法在做一次客户端 bug 定位时定型；
 那次的完整案例见仓外 `notes/resource-preview-protocol-bug.md`。
 
-上游事实出处：快照 `deepseek-harness@dsh-v0.1.7-rc.2`，行号由 `src/facts.test.ts` 复核。
+上游事实出处：快照 `deepseek-harness@dsh-v0.2.0-rc.2`，行号由 `src/facts.test.ts` 复核。
 
 ## 1. 何时用
 
