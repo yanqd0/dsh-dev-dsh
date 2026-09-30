@@ -66,7 +66,8 @@
 - `vendor/include` 把 `!!js` 解析为表达式节点；loader 在**声明的注入激活后**基于该插件上下文插值条目的
   `config`，并在**每次挂载决策**时插值 `disabled`；其余条目元数据保持字面值。
 - 用环境选择插件时用 overlay，不要写条件表达式。
-- 条目定位与 patch 语义的实现细节见「组装与启动链路」分册（plan #14）。
+- 条目定位与 patch 语义的实现细节见 `references/dsh/composition-and-boot.md`（层序与装载）与
+  `references/develop/mounting-and-manifest.md`（patch 语法与警告串）。
 
 ## 6. 对仓外作者的含义
 

@@ -111,7 +111,8 @@ flowchart TB
   也就是 `web` / `headless` / `sdk` / `acp` 的共同底座；`dsh-sdk-minimal` 是刻意不套用它的例外。
 
 仓外插件的挂载字段、失败串与层序细节见 `references/develop/mounting-and-manifest.md`；
-启动链路本身（loader / plugin-manager / 客户端装载）见组装与启动分册（plan #14）。
+启动链路本身见 `references/dsh/composition-and-boot.md`（层序 / loader / 激活）、
+`references/dsh/plugin-management.md`（运行期安装与 reconcile）与 `references/dsh/client-loading.md`（客户端装载）。
 
 ## 5. 客户端面
 
@@ -119,7 +120,8 @@ flowchart TB
 - `packages/client/modules` 由宿主侧组装 boot graph 并下发插件 bundle，浏览器再懒加载。
 - 客户端 shell 在启动后校验各 entry 是否激活；有未激活项就停在启动页并给出计数——**启动时能开 ≠ 运行期正常**。
 - 客户端插件的构建面（未发布的 `clientBundle` preset）不在 0.1.0 的承诺范围内；取证与定位走
-  `references/dogfood/index.md`。
+  `references/dogfood/index.md`。装载链路（声明、启动图、combo 路由、两阶段启动）见
+  `references/dsh/client-loading.md`。
 
 ## 6. 主干：一次输入怎么走
 
