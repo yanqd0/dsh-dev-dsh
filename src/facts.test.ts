@@ -64,7 +64,7 @@ const REFERENCES: Record<string, { dir: string; packageJson: string }> = {
 };
 
 /** Upstream paths the skill is allowed to cite, lifted out of `skill/`. */
-const CITED_PATH_SHAPE = /(?:packages|apps|docs|\.agents|vendor)\/[A-Za-z0-9._/-]+/g;
+const CITED_PATH_SHAPE = /(?:packages|apps|docs|\.agents|vendor|scripts)\/[A-Za-z0-9._/-]+/g;
 
 /** In-skill links: skill/-relative paths under `references/`. */
 const REFERENCE_LINK_SHAPE = /references\/[A-Za-z0-9._/-]+\.md/g;
@@ -804,6 +804,42 @@ const facts: Fact[] = [
     source: 'deepseek-harness@dsh-v0.2.0-rc.2',
     path: 'packages/extensions/cordis-host-runner',
     note: '运行时自扩展：动态 Cordis 插件的 Host 侧执行',
+  },
+  {
+    id: 'session-package-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/core/session/README.zh.md',
+    note: '会话日志包契约：surface 元数据、消息投影注册、deprecated 读取方法、已知限制',
+  },
+  {
+    id: 'session-subsystem-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/subsystems/session.zh.md',
+    note: 'Session 子系统规范全文：SessionEventMap 逐成员语义、surface、deriveMessages、fork、TurnEndReasonMap',
+  },
+  {
+    id: 'persistence-subsystem-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/subsystems/persistence.zh.md',
+    note: '持久化 seam 规范：句柄契约、flush 检查点、崩溃恢复归属、SessionLocation 只作拒绝诊断',
+  },
+  {
+    id: 'persistence-catalog-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/persistence-catalog.zh.md',
+    note: '生成的事件词汇目录（含插件贡献）：payload、surface 标记、声明位置与类型指纹',
+  },
+  {
+    id: 'agent-lifecycle-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/agent-lifecycle.zh.md',
+    note: '轮次 / 步骤时序：assistant/message 与 assistant/attempt 的分工、实时 chunk frame 不持久',
+  },
+  {
+    id: 'gen-persistence-catalog',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'scripts/gen-persistence-catalog.ts',
+    note: '事件词汇目录生成器：KNOWN_SESSION_EVENT_TYPES 与 MESSAGE_PROJECTION_EVENT_TYPES 的来源',
   },
 ];
 
