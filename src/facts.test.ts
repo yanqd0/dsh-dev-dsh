@@ -889,6 +889,102 @@ const facts: Fact[] = [
     path: 'packages/session/session-persistence-jsonl',
     note: 'JSONL provider：root/compression 配置、generation 文件名与选择、撕裂尾部恢复、无删除 API',
   },
+  {
+    id: 'group-index-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/README.zh.md',
+    note: 'package group 索引：逐组一行职责，手册模块页的组清单来源',
+  },
+  {
+    id: 'tool-catalog',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/tool-catalog.zh.md',
+    note: '生成：每个面向模型的工具名 → 工具包 → 依赖 → 写入的事件，手册路由而不手抄',
+  },
+  {
+    id: 'config-catalog',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/config-catalog.md',
+    note: '生成：逐插件包的全部 Config 字段索引，模块页按包路由到这里',
+  },
+  {
+    id: 'client-slot-catalog',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/extensions/cordis-client-runner/src/client/slot-catalog.ts',
+    note: '生成：客户端 slot 座位表（谁声明、谁已占、需要哪个 owner），插件位置页路由到这里',
+  },
+  {
+    id: 'loadable-plugin-list',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/preset/agent-preset/skills/cordis-composition-reference',
+    note: '官方 creator skill：其 references 下的 packages.md 是生成的可载入插件包清单，手册只路由',
+  },
+  {
+    id: 'api-gateway-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/api-gateway.zh.md',
+    note: 'Remote 模型权威：@Remote/@RemoteScope、lookup、generation 与 /api',
+  },
+  {
+    id: 'web-server-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/subsystems/web-server.zh.md',
+    note: 'HTTP 路由注册语义：exact / prefix 匹配、index 注入与唯一 fallback 座位',
+  },
+  {
+    id: 'slots-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/subsystems/slots.zh.md',
+    note: '客户端 slot 契约：归属、props 分享与扩展 API',
+  },
+  {
+    id: 'settings-subsystem-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/subsystems/settings.zh.md',
+    note: 'settings 子系统：键的注册与读取语义，插件配置落点',
+  },
+  {
+    id: 'tools-registry-duplicate-name',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/core/tools/src/index.ts',
+    note: '工具名按 scope 唯一：重复注册抛 `tool "…" is already registered in this scope`',
+  },
+  {
+    id: 'commands-package',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/interaction/commands',
+    note: '命令注册表所在组：命令名的 scope 唯一性与文件回执解析器',
+  },
+  {
+    id: 'commands-registry-duplicate-name',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/interaction/commands/src/index.ts',
+    note: '命令名按 scope 唯一：重复注册抛 `command "…" is already registered in this scope`',
+  },
+  {
+    id: 'permission-preset-auto-singleton',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/interaction/permission-presets/src/index.ts',
+    note: '`auto` preset 单例：重复注册抛 `permission: preset "auto" is already registered`',
+  },
+  {
+    id: 'llm-adapter-registry',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/llm/llm/src/index.ts',
+    note: '模型适配器表：按 provider 唯一，重复注册抛 `LlmError(..., DUPLICATE_ADAPTER)`',
+  },
+  {
+    id: 'session-title-provider-singleton',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/session/session-title/src/index.ts',
+    note: '会话标题提供方单例：重复注册抛 `session-title provider "…" is already registered`',
+  },
+  {
+    id: 'ui-slots-registration-conflicts',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/ui-slots/src/index.ts',
+    note: 'slot 注册冲突：一个 declarer、同 id 同 priority 二次注册抛错（already declared / already has a definition）',
+  },
 ];
 
 /** A fact that cannot be re-verified because its reference tree is missing. */
