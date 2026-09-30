@@ -602,6 +602,12 @@ const facts: Fact[] = [
     note: '配置热重载服务：串行化模块重载、文件监视与管理写入',
   },
   {
+    id: 'plugin-manager-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/boot/plugin-manager/README.zh.md',
+    note: '运行期包操作：inspect/安装/删除/启停/组合包选择、构建审批、兼容性豁免与失败行为',
+  },
+  {
     id: 'dsh-architecture-doc',
     source: 'deepseek-harness@dsh-v0.2.0-rc.2',
     path: 'docs/architecture.zh.md',
