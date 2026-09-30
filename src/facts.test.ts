@@ -505,6 +505,24 @@ const facts: Fact[] = [
     note: '生成的核心 API 参考：Context / events / Fiber 与继承层',
   },
   {
+    id: 'capability-seams-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/capability-seams.zh.md',
+    note: '服务与 capability seam 全景图：核心主干服务、可替换 seam、组合点、独立服务',
+  },
+  {
+    id: 'dsh-glossary-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/glossary.zh.md',
+    note: '领域词汇的权威定义：capability-seam、agent-scope、循环层级、目标、Ralph、人类命令',
+  },
+  {
+    id: 'scope-subsystem-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/subsystems/scope.zh.md',
+    note: '作用域注册标识、dispatch 载体与 Scope 上下文',
+  },
+  {
     id: 'dsh-architecture-doc',
     source: 'deepseek-harness@dsh-v0.2.0-rc.2',
     path: 'docs/architecture.zh.md',
