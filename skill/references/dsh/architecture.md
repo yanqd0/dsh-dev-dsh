@@ -148,6 +148,8 @@ turn/end
   `agent/*`、`llm/*`、`agent/assistant-stream` 是**实时扩展点**。事件域怎么选见 `references/dsh/extension-points.md`。
 - **会话日志是模型所见上下文的唯一来源**：`deriveMessages()` 从日志投影模型历史；「模型可见即已记录」
   是运行时不变式——想给模型新的可见输入，就得新增会话事件（细节见 `references/dsh/design-principles.md`）。
+  事件词汇、surface 派生与插件扩展契约见 `references/dsh/session-log.md`；日志怎么落盘与格式迁移见
+  `references/dsh/persistence-and-format.md`。
 - 时序与流水线细节：`docs/agent-lifecycle.zh.md`、`docs/tool-execution-pipeline.zh.md`；事件生产方 / 消费方：
   `docs/event-producer-consumer.zh.md`。
 

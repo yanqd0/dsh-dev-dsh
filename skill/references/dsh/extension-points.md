@@ -19,6 +19,7 @@
 | 能力事件   | `fs/*`、`tools/*`、`llm/*`、`telemetry/*`                                           | 给某个 seam 追加策略或适配器，又不想引入 import 环时使用          |
 
 - 持久 vs 实时：只有会话事件进日志；能不能跨 reload 存活，是第一个筛子。
+- 会话事件的词汇、surface 与插件扩展契约见 `references/dsh/session-log.md`（§2 词汇、§6 新增事件与消息投影）。
 - 分发模式（`waterfall` 必须调 `next()`、`serial` 没有 `next()`）见 `references/dsh/plugin-model.md` §2。
 - 生产方 / 消费方清单：`docs/event-producer-consumer.zh.md`；轮次时序：`docs/agent-lifecycle.zh.md`。
 

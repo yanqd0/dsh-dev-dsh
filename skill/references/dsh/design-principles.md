@@ -19,6 +19,9 @@
 - **持久事件按读方校验**：`SessionEventMap` 成员默认 _required-on-read_——不认识该事件的构建会拒绝这份日志，
   除非事件在信封上标了 `ignorable: true`。`SESSION_FORMAT_VERSION` 只在**结构**发生变化时 bump。
 
+事件词汇、surface 与消息投影的完整契约见 `references/dsh/session-log.md`；结构变化与迁移链见
+`references/dsh/persistence-and-format.md`。
+
 ## 2. 注册、所有权与回收
 
 - **注册是可逆的副作用**：一切贡献经 `ctx.effect()` / `ctx.on()`，注册表 `register()` 返回 disposer；
@@ -44,7 +47,8 @@
 - 公共 API 处于 **pre-stable**：破坏性变更时**同时更新每个消费方**；有外部可感知的破坏性变更就立即记录
   upgrade guide。
 - 已提交的会话 generation **绝不重命名、覆盖或删除**：迁移以相邻的 `vN → vN+1` 步骤发布一份新的
-  version-named 后继；前驱既不隐含回退，也不隐含降级支持。
+  version-named 后继；前驱既不隐含回退，也不隐含降级支持。迁移链怎么搭、升级要动什么见
+  `references/dsh/persistence-and-format.md` §5–§6。
 - 会话格式的现状与支持窗口以 `docs/session-format-status.zh.md` 为权威；本手册的版本差分页讲**插件该改什么**
   （见 `references/dsh/versions/index.md`）。
 
