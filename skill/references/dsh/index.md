@@ -13,11 +13,12 @@
 4. `references/dsh/design-principles.md`：不变式与设计准则（写码时不能违反什么）。
 5. `references/dsh/composition-and-boot.md`：组装与启动链路（层序、loader 条目树、激活与失败判定）。
 6. `references/dsh/plugin-management.md`：运行期插件管理（安装、启停、reconcile、豁免、重载）。
-7. `references/dsh/concept-model.md`：概念模型（DDD 映射 + 中英对照 + 关系图）。
-8. `references/dsh/domain-vocabulary.md`：官方术语索引（权威在哪、按域分组、相互关系）。
-9. `references/dsh/modules/index.md`：模块 / 子系统索引（外部功能与接口）。
-10. `references/dsh/plugins/index.md`：内置 plugin 索引（哪些位置已经被占了）。
-11. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
+7. `references/dsh/client-loading.md`：客户端装载（声明、启动图、combo 路由、两阶段启动）。
+8. `references/dsh/concept-model.md`：概念模型（DDD 映射 + 中英对照 + 关系图）。
+9. `references/dsh/domain-vocabulary.md`：官方术语索引（权威在哪、按域分组、相互关系）。
+10. `references/dsh/modules/index.md`：模块 / 子系统索引（外部功能与接口）。
+11. `references/dsh/plugins/index.md`：内置 plugin 索引（哪些位置已经被占了）。
+12. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
 
 ## 纪律
 

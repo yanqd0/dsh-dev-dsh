@@ -608,6 +608,42 @@ const facts: Fact[] = [
     note: '运行期包操作：inspect/安装/删除/启停/组合包选择、构建审批、兼容性豁免与失败行为',
   },
   {
+    id: 'client-modules-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/modules/README.zh.md',
+    note: '客户端模块系统：dsh.client 声明、启动图、combo 路由与 revision、惰性 CJS factory',
+  },
+  {
+    id: 'client-web-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/web/README.zh.md',
+    note: 'Web 启动内核：两阶段启动、启动页、平台模块表与激活审计',
+  },
+  {
+    id: 'client-hmr-package',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/hmr',
+    note: '客户端 HMR 驱动器：重建 bundle 上的 invalidate / prefetch',
+  },
+  {
+    id: 'host-webserver',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/host/webserver',
+    note: 'Web host 的 HTTP 服务：命名路由、index 注入与 SPA 回退',
+  },
+  {
+    id: 'client-modules-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/subsystems/client-modules.zh.md',
+    note: '客户端模块子系统：web 插件表、WebBootGraph 协议与 bundle 路由',
+  },
+  {
+    id: 'web-client-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/subsystems/web-client.zh.md',
+    note: 'Web 客户端分层：数据对象层、渲染机制与展示组件',
+  },
+  {
     id: 'dsh-architecture-doc',
     source: 'deepseek-harness@dsh-v0.2.0-rc.2',
     path: 'docs/architecture.zh.md',
