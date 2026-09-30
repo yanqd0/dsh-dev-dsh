@@ -11,15 +11,15 @@
 
 ## 1. 谁负责哪一段
 
-| 角色                    | 位置                                                        | 负责                                                                             |
-| ----------------------- | ----------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| launcher                | `apps/cli`                                                  | 解析启动器 flag、选 profile、初始化模板、把 runtime resolution 装进 Node resolver |
-| profile                 | `$DSH_HOME/profiles/<name>`                                 | 具名组装：`dsh.profile.bundles` 列表、自己的 patch 文件、树外插件依赖             |
-| 组合包（bundle）        | `packages/bundle/base`、`packages/bundle/web-app` …          | 「配置项 + 挂载代码」的分发格式，`dsh.bundle.patch` 指向 patch 文件               |
-| loader                  | `vendor/loader`、`vendor/include`、`vendor/group`            | 把各层 patch 落到条目树上，解析并装载插件模块                                     |
-| 启动与激活审计          | `packages/boot/app-boot`                                    | 加载环境层、组合 profile、启动插件、按 required 策略判定成功或拆卸                |
-| 运行期管理              | `packages/boot/plugin-manager`                              | 安装 / 删除 / 启停 / 选择组合包，并把结果写回 profile                             |
-| 配置热重载              | `packages/boot/hmr`、`vendor/hmr`                           | 监视 manifest 与用户 patch，串行化重载（未启用时改动需要重启）                    |
+| 角色             | 位置                                                | 负责                                                                              |
+| ---------------- | --------------------------------------------------- | --------------------------------------------------------------------------------- |
+| launcher         | `apps/cli`                                          | 解析启动器 flag、选 profile、初始化模板、把 runtime resolution 装进 Node resolver |
+| profile          | `$DSH_HOME/profiles/<name>`                         | 具名组装：`dsh.profile.bundles` 列表、自己的 patch 文件、树外插件依赖             |
+| 组合包（bundle） | `packages/bundle/base`、`packages/bundle/web-app` … | 「配置项 + 挂载代码」的分发格式，`dsh.bundle.patch` 指向 patch 文件               |
+| loader           | `vendor/loader`、`vendor/include`、`vendor/group`   | 把各层 patch 落到条目树上，解析并装载插件模块                                     |
+| 启动与激活审计   | `packages/boot/app-boot`                            | 加载环境层、组合 profile、启动插件、按 required 策略判定成功或拆卸                |
+| 运行期管理       | `packages/boot/plugin-manager`                      | 安装 / 删除 / 启停 / 选择组合包，并把结果写回 profile                             |
+| 配置热重载       | `packages/boot/hmr`、`vendor/hmr`                   | 监视 manifest 与用户 patch，串行化重载（未启用时改动需要重启）                    |
 
 ## 2. 层序：生效配置怎么叠出来
 
@@ -101,15 +101,15 @@ loader 结算后，app-boot 做一次**启动审计**：
 
 失败面（启动期 / 后续配置 HMR）：
 
-| 失败模式                                             | optional 条目启动时 | required 条目启动时 | 后续配置 HMR                              |
-| ---------------------------------------------------- | ------------------- | ------------------- | ----------------------------------------- |
-| 根配置或必需 overlay 缺失 / 不可读 / 非法            | 终止启动            | 终止启动            | 拒绝该次 patch，运行中的配置不变           |
-| 模块 import 失败或求值抛出                            | 警告；继续          | 终止启动            | 报告错误，保留成功兄弟；修正后可激活       |
-| Config schema 校验失败                                | 警告；继续          | 终止启动            | 新条目保持未激活，现有条目保留实例与配置   |
-| `!!js` 求值失败（config 或 `disabled`）               | 警告；继续          | 终止启动            | 报告错误，不把条目当作已禁用               |
-| `apply()` 抛错（同步或结算后的异步）                  | 警告；继续          | 终止启动            | 报告错误，保留成功兄弟                     |
-| 注入的服务不可用                                      | 警告；等待依赖      | 终止启动            | 条目继续等待；补上提供方即可激活           |
-| 未处理 rejection（脱离 `apply()` 的异步任务）         | 致命：释放并非零退出 | 致命：释放并非零退出 | 致命：释放并非零退出（与条目 id 无关）     |
+| 失败模式                                      | optional 条目启动时  | required 条目启动时  | 后续配置 HMR                             |
+| --------------------------------------------- | -------------------- | -------------------- | ---------------------------------------- |
+| 根配置或必需 overlay 缺失 / 不可读 / 非法     | 终止启动             | 终止启动             | 拒绝该次 patch，运行中的配置不变         |
+| 模块 import 失败或求值抛出                    | 警告；继续           | 终止启动             | 报告错误，保留成功兄弟；修正后可激活     |
+| Config schema 校验失败                        | 警告；继续           | 终止启动             | 新条目保持未激活，现有条目保留实例与配置 |
+| `!!js` 求值失败（config 或 `disabled`）       | 警告；继续           | 终止启动             | 报告错误，不把条目当作已禁用             |
+| `apply()` 抛错（同步或结算后的异步）          | 警告；继续           | 终止启动             | 报告错误，保留成功兄弟                   |
+| 注入的服务不可用                              | 警告；等待依赖       | 终止启动             | 条目继续等待；补上提供方即可激活         |
+| 未处理 rejection（脱离 `apply()` 的异步任务） | 致命：释放并非零退出 | 致命：释放并非零退出 | 致命：释放并非零退出（与条目 id 无关）   |
 
 完整矩阵与逐条证据见 `packages/boot/app-boot/README.zh.md`。
 
@@ -119,11 +119,11 @@ loader 结算后，app-boot 做一次**启动审计**：
 
 ## 5. 预览与诊断：三种 dump
 
-| 命令                            | 内容                                                                                     |
-| ------------------------------- | ---------------------------------------------------------------------------------------- |
-| `dsh --profile <p> --dump-default-config` | 只打印组合包各层                                                                          |
-| `dsh --profile <p> --dump-config`         | 加上 profile 的 `cordis.patch.yml`、home 级 patch 与 `--patch` overlay                    |
-| `dsh --profile <p> --dump-config-schema`  | 组合成功后输出 JSON Schema 2020-12；会**导入**插件模块读 schema，只对可信 profile 运行     |
+| 命令                                      | 内容                                                                                   |
+| ----------------------------------------- | -------------------------------------------------------------------------------------- |
+| `dsh --profile <p> --dump-default-config` | 只打印组合包各层                                                                       |
+| `dsh --profile <p> --dump-config`         | 加上 profile 的 `cordis.patch.yml`、home 级 patch 与 `--patch` overlay                 |
+| `dsh --profile <p> --dump-config-schema`  | 组合成功后输出 JSON Schema 2020-12；会**导入**插件模块读 schema，只对可信 profile 运行 |
 
 三者都会打印注释标明每行来自哪个文件、被哪些 overlay 改过，`!!js` 保持未求值，未命中目标的 patch 报到
 stderr；dump 会初始化缺失的 profile 文件，但**不跑**应用的参数提供方，因此展示的是解析应用参数之前的树。
