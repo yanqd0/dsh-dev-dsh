@@ -15,11 +15,12 @@
 6. `references/dsh/plugin-management.md`：运行期插件管理（安装、启停、reconcile、豁免、重载）。
 7. `references/dsh/client-loading.md`：客户端装载（声明、启动图、combo 路由、两阶段启动）。
 8. `references/dsh/session-log.md`：会话日志与派生上下文（事件词汇、surface、`deriveMessages()`、插件扩展点）。
-9. `references/dsh/concept-model.md`：概念模型（DDD 映射 + 中英对照 + 关系图）。
-10. `references/dsh/domain-vocabulary.md`：官方术语索引（权威在哪、按域分组、相互关系）。
-11. `references/dsh/modules/index.md`：模块 / 子系统索引（外部功能与接口）。
-12. `references/dsh/plugins/index.md`：内置 plugin 索引（哪些位置已经被占了）。
-13. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
+9. `references/dsh/persistence-and-format.md`：持久化、崩溃恢复与格式版本（seam / 句柄、flush 屏障、迁移链）。
+10. `references/dsh/concept-model.md`：概念模型（DDD 映射 + 中英对照 + 关系图）。
+11. `references/dsh/domain-vocabulary.md`：官方术语索引（权威在哪、按域分组、相互关系）。
+12. `references/dsh/modules/index.md`：模块 / 子系统索引（外部功能与接口）。
+13. `references/dsh/plugins/index.md`：内置 plugin 索引（哪些位置已经被占了）。
+14. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
 
 ## 纪律
 

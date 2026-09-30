@@ -1,8 +1,9 @@
 # 会话日志与派生上下文：模型到底看见了什么
 
-> 本文是 `references/dsh/index.md` 的子页；日志怎么落到磁盘、格式版本与迁移见同目录的 `persistence-and-format.md`。
+> 本文是 `references/dsh/index.md` 的子页。
 >
 > **范围**：一次交互在 `SessionEvent` 日志里留下什么、这份日志怎么变成模型可见的 `Message[]`、插件新增事件类型时必须遵守什么。
+> 日志怎么落到磁盘、格式版本与迁移见 `references/dsh/persistence-and-format.md`；
 > 轮次与步骤的时序主干见 `references/dsh/architecture.md` §6；事件域与扩展点判据见 `references/dsh/extension-points.md`；
 > 为什么这样设计见 `references/dsh/design-principles.md` §1。
 > **事实 pin**：`deepseek-harness@dsh-v0.2.0-rc.2`。本页写机制与契约，不堆随版本变化的清单。
@@ -69,7 +70,7 @@ flowchart TB
 - **全量清单路由到生成目录**：`docs/persistence-catalog.zh.md` 由 `scripts/gen-persistence-catalog.ts` 生成，
   列出全部成员（含插件贡献）、payload、surface 标记与声明位置。本页不复制它。
 - **`TurnEndReasonMap`** 同样是可合并扩展的和类型；`interrupted`（崩溃后补齐）与 `forked`（fork 边界）是唯一两个
-  loop 不会实时发出的原因，见同目录的 `persistence-and-format.md` §4。
+  loop 不会实时发出的原因，见 `references/dsh/persistence-and-format.md` §4。
 - **事件载荷必须无损 JSON**：`Session.append` 在写入点逐值校验（BigInt、函数、symbol、`undefined`、`-0`、非有限数、
   循环引用、稀疏数组、Map/Set/Date 等一律拒绝），坏的载荷在 append 处失败，永远不会落进日志。
 
@@ -150,7 +151,7 @@ declare module '@deepseek-ai/dsh-session/types' {
   插件写它会把此前的所有开闭括号静默划成种子历史，因此禁止。
 - **两条构造路径的所有权不同**：`Session.create()` 复制并深冻结借用来的 seed；`Session.fromRestore()` 直接采纳
   独立拥有或已深冻结的 seed（不复制、不再校验载荷形状以外的东西）。恢复路径还需要 `inheritedEventCount`。
-- **删除与清洗不在这里**：会话没有删除 API；持久化侧细节见同目录的 `persistence-and-format.md`。
+- **删除与清洗不在这里**：会话没有删除 API；持久化侧细节见 `references/dsh/persistence-and-format.md`。
 
 ## 8. 失败面：写错时的可观察表现
 

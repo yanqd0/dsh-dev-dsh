@@ -841,6 +841,54 @@ const facts: Fact[] = [
     path: 'scripts/gen-persistence-catalog.ts',
     note: '事件词汇目录生成器：KNOWN_SESSION_EVENT_TYPES 与 MESSAGE_PROJECTION_EVENT_TYPES 的来源',
   },
+  {
+    id: 'persistence-changes-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/persistence-changes/README.zh.md',
+    note: '持久化类型变更记录规则：same-version 与 version-bump 的判定、定稿检查点与不可变记录',
+  },
+  {
+    id: 'persistence-finalized-v4',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/persistence-changes/finalized/v4.json',
+    note: '已接受兼容性基线（定稿记录）落在版本命名检查点里',
+  },
+  {
+    id: 'session-format-version-cookbook',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/cookbook/adding-a-session-format-version.zh.md',
+    note: '新增相邻格式版本的实操：manifest 声明、codec 复用、归档前驱、继承 cut 是逻辑事件数',
+  },
+  {
+    id: 'gen-session-format-catalog',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'scripts/gen-session-format-catalog.ts',
+    note: '格式目录生成器：校验每版一个 codec、相邻边不缺口、codec 导出名与依赖一致',
+  },
+  {
+    id: 'session-group-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/session/README.zh.md',
+    note: 'session 包组地图：持久化 / 投影 / 标题 / 遥测四族与各自 ctx 键',
+  },
+  {
+    id: 'session-checkpoint-policy',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/session/session-checkpoint-policy',
+    note: 'checkpoint policy：在 llm/stream 首块、顶层 tools/execute、agent/pre-step 三处 fail-closed flush',
+  },
+  {
+    id: 'session-persistence-seam',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/session/session-persistence',
+    note: '持久化 seam：SessionPersistence 服务、SessionHandle、所有权错误与 revision 可比范围',
+  },
+  {
+    id: 'session-persistence-jsonl',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/session/session-persistence-jsonl',
+    note: 'JSONL provider：root/compression 配置、generation 文件名与选择、撕裂尾部恢复、无删除 API',
+  },
 ];
 
 /** A fact that cannot be re-verified because its reference tree is missing. */
