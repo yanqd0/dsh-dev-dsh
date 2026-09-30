@@ -572,6 +572,36 @@ const facts: Fact[] = [
     note: '官方中英译法表：领域术语的规范中文对应',
   },
   {
+    id: 'app-boot-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/boot/app-boot/README.zh.md',
+    note: '启动策略：profile 组合、required 条目审计、失败矩阵、dump 与兼容性检查',
+  },
+  {
+    id: 'boot-subsystem-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/subsystems/boot.zh.md',
+    note: 'profile 管理：PluginManager 服务方法、bundle 行、app-boot/hmr/plugin-manager 事件',
+  },
+  {
+    id: 'cmdline-package',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/boot/cmdline',
+    note: '启动器到应用的命令行交接：ctx.cmdlineArgs 快照',
+  },
+  {
+    id: 'web-app-bundle',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/bundle/web-app',
+    note: 'web profile 的组合层：浏览器应用与客户端插件行',
+  },
+  {
+    id: 'boot-hmr-package',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/boot/hmr',
+    note: '配置热重载服务：串行化模块重载、文件监视与管理写入',
+  },
+  {
     id: 'dsh-architecture-doc',
     source: 'deepseek-harness@dsh-v0.2.0-rc.2',
     path: 'docs/architecture.zh.md',
