@@ -88,6 +88,25 @@ const VERSION_PIN_SHAPE = /\b[a-z0-9][a-z0-9._-]*@(?:dsh-)?v?\d/;
 const PLACEHOLDER_MARKER = '占位｜归属：';
 const PLACEHOLDER_PLAN_SHAPE = /plan #\d+/;
 
+/**
+ * The one page allowed to declare the manual's current baseline. The baseline
+ * moves with the runtime, so keeping the claim in a single place turns an
+ * upgrade into one judgement plus per-page pins (notes/skill-design.md §4.1).
+ */
+const BASELINE_OWNER = 'references/dsh/versions/index.md';
+
+/** Prose that restates "this is the current baseline"; legal only in that page. */
+const BASELINE_CLAIM_SHAPE = /当前基准|与本机运行时一致/;
+
+/**
+ * The one page that pairs English domain terms with their Chinese counterparts.
+ * Everywhere else the terms stay English (notes/skill-design.md §10).
+ */
+const BILINGUAL_TERM_PAGE = 'references/dsh/concept-model.md';
+
+/** The bilingual table's header row must lead with the English column. */
+const BILINGUAL_HEADER_SHAPE = /^\|\s*English[^|]*\|[^|]*中文/m;
+
 interface Fact {
   /** Stable slug of the fact as the skill states it. */
   id: string;
@@ -1072,6 +1091,25 @@ describe('fact ledger metadata', () => {
         return (text.match(PIN_IN_PROSE_SHAPE) ?? []).length === 0;
       });
     expect(unpinned, 'content pages without a <repo>@<tag> pin').toEqual([]);
+  });
+
+  it('declares the current baseline in exactly one page', () => {
+    const offenders = skillPages()
+      .filter((page) => page !== BASELINE_OWNER)
+      .filter((page) => BASELINE_CLAIM_SHAPE.test(readFileSync(join(SKILL_DIR, page), 'utf8')));
+    expect(offenders, `pages other than ${BASELINE_OWNER} claiming a baseline`).toEqual([]);
+  });
+
+  it('keeps the English ↔ 中文 term table on the concept page only', () => {
+    const concept = readFileSync(join(SKILL_DIR, BILINGUAL_TERM_PAGE), 'utf8');
+    expect(
+      concept.match(BILINGUAL_HEADER_SHAPE) ?? [],
+      `${BILINGUAL_TERM_PAGE} needs an "English | 中文" term-table header`
+    ).not.toEqual([]);
+    const offenders = skillPages()
+      .filter((page) => page !== BILINGUAL_TERM_PAGE)
+      .filter((page) => BILINGUAL_HEADER_SHAPE.test(readFileSync(join(SKILL_DIR, page), 'utf8')));
+    expect(offenders, 'pages duplicating the bilingual term table').toEqual([]);
   });
 
   it('makes every placeholder name the plan that fills it', () => {
