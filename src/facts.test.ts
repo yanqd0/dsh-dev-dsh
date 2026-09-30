@@ -1184,6 +1184,24 @@ describe('fact ledger metadata', () => {
     expect(offenders, 'pages duplicating the bilingual term table').toEqual([]);
   });
 
+  it('pins every content page to a revision the ledger knows', () => {
+    // A provenance pin must name a revision the ledger actually tracks, so a
+    // stale pin (a baseline no fact carries any more) fails loudly instead of
+    // silently skipping re-verification (notes/skill-design.md §4.1). History
+    // pages may also name older revisions; one known pin is enough for them.
+    const known = new Set(facts.map((fact) => tagOf(fact.source)));
+    const offenders = skillPages()
+      .filter((page) => page.startsWith('references/') && !page.endsWith('/index.md'))
+      .filter((page) => {
+        const text = readFileSync(join(SKILL_DIR, page), 'utf8');
+        const pins = (text.match(PIN_IN_PROSE_SHAPE) ?? []).filter(
+          (pin) => REFERENCES[pin.slice(0, pin.indexOf('@'))] !== undefined
+        );
+        return !pins.some((pin) => known.has(pin.slice(pin.indexOf('@') + 1)));
+      });
+    expect(offenders, 'content pages whose pin names no ledger revision').toEqual([]);
+  });
+
   it('makes every placeholder name the plan that fills it', () => {
     const offenders: string[] = [];
     for (const page of skillPages()) {
