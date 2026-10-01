@@ -132,9 +132,43 @@ dsh --profile dogfood --dump-config-schema    # JSON Schema（会 import 插件�
 ## 7. 客户端证据入口
 
 浏览器层的证据（`__DSH_BOOT__`、SSE `/plugins/events`、combo `/plugins/??…&rev=`）与只读探针见
-`references/dogfood/client-console-diagnosis.md`；装载机制见 `references/dsh/client-loading.md`。
+`references/dogfood/client-console-diagnosis.md`；装载机制见 `references/dsh/client-loading.md`；
+「manifest 里声明了到底能不能证明它生效」见 `references/dogfood/client-verification-ladder.md`。
 
-## 8. 取证纪律
+## 8. 运行时 API 探针：Inspect 的按需下钻
+
+`cordis_inspect_list` / `cordis_inspect_query` 是**只读**探针：不执行业务方法、不改运行时。它的价值全在
+「按需要什么就问什么」，因为**全量查询很贵**——一次无参全量能把整棵 slot 树或整份 Service 契约目录倒出来，
+实测一次约 10–50 KB 量级（某次 dsh-mint 会话复盘里，10 次 `cordis_inspect_query` 合计 12.5 万字符，
+单次均值约 12.5 KB，占该会话工具结果总量的 17%）。
+
+**可用性**：provider 面由装载的插件决定。cordis preset（agent 预设 `cordis`）暴露这些工具；换预设就没有。
+命名别猜，先 `cordis_inspect_list`。
+
+| platform | provider  | method         | 精确输入                                                   |
+| -------- | --------- | -------------- | ---------------------------------------------------------- |
+| host     | `Service` | `listService`  | `{"service":"webServer"}`（省略 = 全量目录）               |
+| host     | `Event`   | `listEvents`   | `{"event":"<名>"}`（省略 = 全量目录）                      |
+| host     | `Config`  | `listConfigs`  | 先 `{"name":"<包名>"}` 分页定位条目，再 `{"entry":"<id>"}` |
+| host     | `Tool`    | `listTools`    | 无输入                                                     |
+| client   | `Service` | `listService`  | 同上；只覆盖**编译期**目录                                 |
+| client   | `Slots`   | `listSubTree`  | `{"root":"<slot 名>"}`（省略 = 全部 slot 树）              |
+| client   | `Theme`   | `listTokens`   | 无输入                                                     |
+| client   | `Builtin` | `listBuiltins` | 无输入（动态客户端半边的符号面）                           |
+
+纪律：
+
+- **先认 provider，再写精确 key**：`{"service":"…"}` / `{"event":"…"}` 都要**精确键**；没有这个名字就没有答案，
+  不要用全量目录去"扫一眼"（全量只在校验目录本身——排查某服务是否失踪——时才值）。
+- **slot 按 `root` 下钻**：`Slots.listSubTree` 只有带 `root` 时才附一条 `selected` 的完整报告
+  （catalog + occupants + register 选项）；先不带 `root` 取拓扑，或直接按已知 slot 名精确查。
+- **client 查询要页面在场**：宿主把请求转给已连接的浏览器页，等第一个有效响应（`clientInspectTimeoutMs`，
+  默认 10s）；没有页面/超时会给 Client failure，重连**不会重放**上一次请求，要重新发起。
+- **跨层别混用**：Host 与 Client 各有自己的 Service / Event provider，名字相同、内容不同；查之前先确认 platform。
+- **枚举不了的别硬找**：编译期目录里的服务才在 `Service.listService`；运行时 `ctx.reflect.provide` 的服务
+  （如 `sidebarRight` / `sidebarRightTabs`）不在其中——见 `references/dogfood/client-verification-ladder.md`。
+
+## 9. 取证纪律
 
 - **一条判断一条命令**：先做最便宜的证伪，再决定要不要读大文件。
 - **先看时间分布再看内容**：任何 ndjson 日志先
