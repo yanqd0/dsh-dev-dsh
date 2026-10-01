@@ -38,6 +38,7 @@
   "scripts": {
     "build": "tsup && node scripts/build-skill.mjs",
     "postinstall": "node scripts/install-skill-postinstall.mjs",
+    "dogfood:skill": "node dist/install-skill.js --link --source skill",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src",

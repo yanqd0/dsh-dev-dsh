@@ -4,6 +4,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -18,8 +19,10 @@ import {
   SKILL_NAME,
   installSkill,
   resolveDshHome,
+  skillInstallState,
   skillSource,
   skillTarget,
+  skillTargetsLink,
 } from './install-skill.ts';
 
 const created: string[] = [];
@@ -195,5 +198,112 @@ describe('installSkill', () => {
     expect(result.ok).toBe(false);
     expect(result.reason).toBeDefined();
     expect(logs).toHaveLength(1);
+  });
+});
+
+describe('installSkill link mode (dogfooding)', () => {
+  it('links the target at the source', () => {
+    const dshHome = tempDir();
+    const source = makeSource('v1');
+
+    expect(installSkill({ dshHome, source, link: true })).toEqual({ ok: true });
+    const target = skillTarget(dshHome);
+    expect(lstatSync(target).isSymbolicLink()).toBe(true);
+    expect(realpathSync(target)).toBe(realpathSync(source));
+    expect(readFileSync(join(target, 'SKILL.md'), 'utf8')).toBe('v1');
+  });
+
+  it('is idempotent: an existing correct link is left untouched', () => {
+    const dshHome = tempDir();
+    const source = makeSource('v1');
+    installSkill({ dshHome, source, link: true });
+    const before = lstatSync(skillTarget(dshHome)).mtimeMs;
+
+    expect(installSkill({ dshHome, source, link: true })).toEqual({ ok: true });
+    expect(lstatSync(skillTarget(dshHome)).mtimeMs).toBe(before);
+  });
+
+  it('reads live worktree edits through the link without any sync', () => {
+    const dshHome = tempDir();
+    const source = makeSource('v1', { 'references/a.md': 'a1' });
+    installSkill({ dshHome, source, link: true });
+
+    writeFileSync(join(source, 'references/a.md'), 'a2');
+    expect(readFileSync(join(skillTarget(dshHome), 'references/a.md'), 'utf8')).toBe('a2');
+  });
+
+  it('relinks a symlink that points elsewhere', () => {
+    const dshHome = tempDir();
+    const source = makeSource('v1');
+    const other = makeSource('v2');
+    mkdirSync(join(dshHome, 'skills'), { recursive: true });
+    symlinkSync(other, skillTarget(dshHome));
+
+    expect(installSkill({ dshHome, source, link: true })).toEqual({ ok: true });
+    expect(realpathSync(skillTarget(dshHome))).toBe(realpathSync(source));
+  });
+
+  it('refuses to replace a real directory without force, and does not delete it', () => {
+    const dshHome = tempDir();
+    const source = makeSource('v1');
+    installSkill({ dshHome, source });
+    const logs: string[] = [];
+
+    expect(installSkill({ dshHome, source, link: true, log: (m) => logs.push(m) })).toEqual({
+      ok: false,
+      reason: 'target-exists',
+    });
+    expect(lstatSync(skillTarget(dshHome)).isSymbolicLink()).toBe(false);
+    expect(logs.some((line) => line.includes('--force'))).toBe(true);
+  });
+
+  it('replaces a real directory when forced', () => {
+    const dshHome = tempDir();
+    const source = makeSource('v1');
+    installSkill({ dshHome, source });
+
+    expect(installSkill({ dshHome, source, link: true, force: true })).toEqual({ ok: true });
+    expect(lstatSync(skillTarget(dshHome)).isSymbolicLink()).toBe(true);
+    expect(realpathSync(skillTarget(dshHome))).toBe(realpathSync(source));
+  });
+});
+
+describe('skillInstallState', () => {
+  it('reports a missing target as stale', () => {
+    const source = makeSource('v1');
+
+    expect(skillInstallState(source, skillTarget(tempDir()))).toBe('stale');
+    expect(skillTargetsLink(source, skillTarget(tempDir()))).toBeUndefined();
+  });
+
+  it('reports a byte-identical copy', () => {
+    const dshHome = tempDir();
+    const source = makeSource('v1', { 'references/a.md': 'a1' });
+    installSkill({ dshHome, source });
+
+    expect(skillInstallState(source, skillTarget(dshHome))).toBe('identical');
+  });
+
+  it('reports a stale copy', () => {
+    const dshHome = tempDir();
+    installSkill({ dshHome, source: makeSource('v1') });
+
+    expect(skillInstallState(makeSource('v2'), skillTarget(dshHome))).toBe('stale');
+  });
+
+  it('reports a link to the source', () => {
+    const dshHome = tempDir();
+    const source = makeSource('v1');
+    installSkill({ dshHome, source, link: true });
+
+    expect(skillInstallState(source, skillTarget(dshHome))).toBe('linked');
+  });
+
+  it('reports a symlink pointing elsewhere as stale', () => {
+    const dshHome = tempDir();
+    mkdirSync(join(dshHome, 'skills'), { recursive: true });
+    symlinkSync(makeSource('v2'), skillTarget(dshHome));
+
+    expect(skillInstallState(makeSource('v1'), skillTarget(dshHome))).toBe('stale');
   });
 });

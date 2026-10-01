@@ -27,6 +27,7 @@ skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无�
 - **术语与版本提及纪律**（plan #13 起，两条都由 `src/facts.test.ts` 校验）：领域概念术语以**英文**为准，中英对照只在 `references/dsh/concept-model.md` 给出，其它页只用英文术语；「当前基准」只在 `references/dsh/versions/index.md` 声明，其它内容页只保留一条 provenance pin，不写「当前 / 与本机一致」类叙述。
 - **图表走 skill**：需要产出 mermaid 图（流程图、mindmap、时序图…）时，先调用 `my-mermaid` skill，读该图类型的 reference 后再生成，**不凭记忆手写**；换图类型必须重读对应 reference。图与所在页面同一次提交，格式交给 `pnpm format`。
 - **`install-skill` 是 content-sync，不是无条件覆盖**（`src/install-skill.ts`）：目标与源的**整树**（`SKILL.md` + `references/` 逐文件字节）一致就不动（避免每次开会话都抖动）；目标本身是 symlink 则**不覆盖**（开发流可能用它接管该目录）；每个失败只记一行并返回 `{ ok: false }`，**绝不使插件加载或包安装失败**。
+- **本地 dogfooding 走 `--link --source skill`，不是拷贝**：`pnpm run dogfood:skill` 把 `~/.dsh/skills/dsh-dev-dsh` 换成指向本仓 `skill/` 的 symlink——模型每次加载都重读盘，所以改完即生效、**不需要 build、不需要同步**；`--source` 缺省是 `dist/skill`（发布路径），`--copy` 恢复拷贝语义，`--verify` 用退出码报告安装面是否与给出的源一致。改 `src/**` 后仍要先 `pnpm build`：跑着的 dsh 进程持有它加载时的 `dist` 模块。
 - **两个触发点**：`package.json` 的 postinstall（npm 总会跑；pnpm 10+ 默认拦截依赖构建脚本，需 allowlist）与宿主 `apply()` 内的同步（**保底路径**，postinstall 被拦也能生效）。
 - **`cordis.patch.yml` 是插件的挂载声明**，三条契约（改动前先读文件头注释）：条目必须用 `insert:` 列表包裹（裸 `- id/name` 是覆盖语义）、`config` 必须显式给出（空对象即可）、与 profile 里手写的同 id 条目并存**不报错**——0.1.7-rc.2 是 last-wins 静默复用/替换（旧说法 `duplicate loader entry id` 在 0.1.7-rc.2 已无此抛错，见 issue #16）；该文件必须留在 `files` 随包发布。
 - **`pnpm-workspace.yaml` 的 `allowBuilds: esbuild: true` 勿删**：删掉会让 pnpm 拒跑构建脚本，`install` / `build` 直接失败。

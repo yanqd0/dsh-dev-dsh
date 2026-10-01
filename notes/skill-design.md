@@ -74,6 +74,24 @@
 - 升级基准版本：`git -C 3rdp/deepseek-harness checkout <新 tag>` → 重校 pin 到旧 tag 的页面 → 更新 pin → 写差分页。
 - 想要自动多版本复核，需要扩展 `src/facts.test.ts` 的 `REFERENCES`（一个 repo 对应多个 checkout）；当前明确不做。
 
+### 6.1 本地校验（dogfooding）
+
+模型读的是**安装面**而非工作区（`dsh-skill-filesystem` 的根表：`custom` rank 300、`user-dsh` rank 400，
+都指向 `~/.dsh/skills/<name>`），而 `installSkill()` 只在**插件加载时**同步一次。所以改 `skill/**` 后
+若不同步，下一个会话读到的仍是旧拷贝——这不是缓存问题，是「读哪棵树」的问题。
+
+- **推荐路径 `--link --source skill`**：`pnpm run dogfood:skill` 把安装面换成指向本仓 `skill/` 的 symlink
+  （`--source` 缺省是 `dist/skill`，即发布用的那棵）。依据两条上游行为：① `skill-filesystem`
+  **每次加载都重读当前文件**（所以改完即生效、不需要任何同步）；② `installSkill()` 对 symlink 目标
+  **刻意不覆盖**（开发流接管该目录的钩子，见 `src/install-skill.ts`）。
+  link 模式**不经过 `dist`**，因此改 skill 正文不需要 `pnpm build`。
+- **发布路径 `--copy`**：仍从 `dist/skill` 拷贝，`pnpm build` 后才反映最新内容；它是 postinstall 与
+  `apply()` 的默认行为，也是 Windows / 无 symlink 权限时的回退。
+- **`--verify`**：用退出码报告安装面与**打命令时给出的**那棵树是否一致（link 指向该源 / copy 逐字节一致 /
+  否则 `stale`），让「忘了同步」变成一条能跑的命令，而不是靠人回忆。
+- 边界：改 `src/**` 后仍要 `pnpm build`——跑着的 dsh 进程持有它加载时的 `dist` 模块；
+  `AGENTS.md` 由宿主按轮注入，与安装面无关。
+
 ## 7. 占位纪律
 
 - 尚未填充的索引写成占位，固定标记：
@@ -99,6 +117,7 @@
 | #18  | dogfood 环境与取证流程                                                                        | done                                                       |
 | #19  | 版本差分改按大版本线（0.2.0 基准 + 0.1.7 / 0.1.5 两页）与分册重校                             | done                                                       |
 | #20  | 客户端面补页（产物形态 / 取数通道 / seat 索引）、Inspect 纪律、agent 侧验证阶梯（#72–#74）    | done                                                       |
+| #21  | dogfooding 本地生效：`--link` 安装模式与 `--verify`（#75）                                    | done                                                       |
 
 plan 号以 `mint plan list` 为准，上表只固定职责边界。
 

@@ -1,6 +1,16 @@
-import { cpSync, existsSync, lstatSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import {
+  cpSync,
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+} from 'node:fs';
 import { homedir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /**
@@ -20,6 +30,13 @@ import { fileURLToPath } from 'node:url';
  * dev flow that wants to own the directory with a symlink must not be
  * clobbered. Every failure logs one line and returns `{ ok: false }`; it never
  * breaks plugin load or package install.
+ *
+ * `opts.link` selects the DEV mode of that same sync: instead of copying, the
+ * target becomes a symlink to the source directory. The skill provider re-reads
+ * every loaded body from disk, so a linked target makes worktree edits visible
+ * to the next load with no build and no sync step. This is the dogfooding path
+ * (`pnpm run dogfood:skill`); the copying path stays the shipped one, so a
+ * published install never depends on a symlink.
  */
 
 const DIRNAME = dirname(fileURLToPath(import.meta.url));
@@ -48,7 +65,7 @@ export function skillTarget(dshHome: string): string {
 }
 
 /** True when the installed skill tree already matches the bundled one. */
-function isCurrent(source: string, target: string): boolean {
+export function isCurrent(source: string, target: string): boolean {
   try {
     const bundled = treeSnapshot(source);
     const installed = treeSnapshot(target);
@@ -98,6 +115,97 @@ export interface InstallOptions {
   dshHome?: string;
   source?: string;
   log?: (message: string) => void;
+  /** DEV mode: make the target a symlink to the source instead of a copy. */
+  link?: boolean;
+  /** Replace a real directory at the target when `link` is set. */
+  force?: boolean;
+}
+
+/**
+ * Report how the target relates to the source when the target is a symlink.
+ *
+ * `undefined` means the target is absent or is not a symlink (a copy, or a
+ * regular file); `true` means it resolves to the source. Used by the CLI's
+ * `--verify`: link mode cannot use the byte comparison, because
+ * {@link treeSnapshot} skips symlinks by design.
+ *
+ * @param source - absolute path of the bundled skill directory.
+ * @param target - absolute path of the installed skill directory.
+ * @returns the link verdict, or `undefined` when the target is not a symlink.
+ */
+export function skillTargetsLink(source: string, target: string): boolean | undefined {
+  try {
+    if (!existsSync(target) || !lstatSync(target).isSymbolicLink()) {
+      return undefined;
+    }
+  } catch {
+    return undefined;
+  }
+  return resolveSymlink(target) === resolveSymlink(source);
+}
+
+/** How an installed skill directory compares to the bundled source. */
+export type SkillInstallState = 'identical' | 'linked' | 'stale';
+
+/**
+ * Classify the installed skill directory against the bundled source.
+ *
+ * A symlink target cannot be judged byte-wise ({@link treeSnapshot} skips
+ * symlinks by design), so link and copy installs are reported separately. Used
+ * by the CLI's `--verify` and by its tests; it reports, it never writes.
+ *
+ * @param source - absolute path of the bundled skill directory.
+ * @param target - absolute path of the installed skill directory.
+ * @returns `linked` when the target resolves to the source, `identical` when a
+ *   copy matches byte for byte, `stale` otherwise.
+ */
+export function skillInstallState(source: string, target: string): SkillInstallState {
+  const linked = skillTargetsLink(source, target);
+  if (linked === true) {
+    return 'linked';
+  }
+  if (linked === undefined && isCurrent(source, target)) {
+    return 'identical';
+  }
+  return 'stale';
+}
+
+/** Resolve a path to its real location, tolerating a missing target. */
+function resolveSymlink(path: string): string {
+  try {
+    return realpathSync(path);
+  } catch {
+    return resolve(path);
+  }
+}
+
+/** Point `target` at `source`; `force` replaces a real directory. */
+function linkTarget(
+  source: string,
+  target: string,
+  force: boolean,
+  log: (m: string) => void
+): InstallResult {
+  if (existsSync(target)) {
+    const existing = lstatSync(target);
+    if (existing.isSymbolicLink()) {
+      if (resolveSymlink(target) === resolveSymlink(source)) {
+        return { ok: true };
+      }
+      rmSync(target, { force: true });
+    } else if (force) {
+      rmSync(target, { recursive: true, force: true });
+    } else {
+      log(
+        `[dsh-dev-dsh] ${target} is a real directory (an installed copy) — re-run with --force to replace it with a symlink`
+      );
+      return { ok: false, reason: 'target-exists' };
+    }
+  }
+  mkdirSync(dirname(target), { recursive: true });
+  // 'dir' keeps the link valid on Windows where junctions are not implied.
+  symlinkSync(source, target, 'dir');
+  return { ok: true };
 }
 
 /**
@@ -114,6 +222,9 @@ export function installSkill(opts: InstallOptions = {}): InstallResult {
     if (!existsSync(source)) {
       log(`[dsh-dev-dsh] skill source missing (${source}) — skipping skill install`);
       return { ok: false, reason: 'source missing' };
+    }
+    if (opts.link === true) {
+      return linkTarget(source, target, opts.force === true, log);
     }
     if (existsSync(target)) {
       // a dev-flow symlink owns the target — never clobber it

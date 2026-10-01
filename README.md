@@ -97,6 +97,31 @@ pnpm pack:check     # pnpm pack --dry-run: inspect what would actually be publis
 Issue, plan, and milestone tracking lives in `mint`, not in these docs;
 [AGENTS.md](AGENTS.md) is the contributor-facing project navigation.
 
+### Dogfooding skill changes
+
+An installed copy of the skill is what agents actually read (`~/.dsh/skills/<name>`), and the
+copy is written by `apply()` on every plugin load — so without a dev path, every `skill/**`
+edit needs a rebuild and a reload. `--link` replaces that copy with a symlink to the worktree:
+
+```bash
+pnpm build                                          # once: builds the CLI itself
+pnpm run dogfood:skill                              # ~/.dsh/skills/dsh-dev-dsh -> <repo>/skill
+node dist/install-skill.js --verify --source skill  # exit 0 = the install matches that source
+```
+
+After that, edit `skill/**` and the next `skill` load sees the change — **no rebuild, no sync**;
+the provider re-reads every loaded body from disk. `--source <dir>` picks a different source
+(the default is the bundled `dist/skill`, so the copy path and `postinstall` are unchanged),
+`--force` replaces an existing real directory, and `--copy` restores the published
+copy-and-sync path.
+
+Two boundaries worth knowing: `AGENTS.md` is injected by the host per turn rather than read from
+the installed tree, and a running dsh process keeps the `dist` modules it loaded at boot — so
+after editing `src/**`, rebuild `dist` before reloading the plugin.
+
+Note for agent sessions: this command writes `$DSH_HOME/skills`, outside the workspace, so a
+sandboxed run needs one escalation. On Windows, prefer `--copy`.
+
 ## Publishing
 
 Two registries carry the same name: npmjs (the primary source) and GitHub
