@@ -1920,6 +1920,61 @@ const facts: Fact[] = [
     line: 56,
     note: 'WebBootEntry.url 是 document-relative 的 combo 引用（0.1.5→0.1.7 期间从绝对端点改为相对文档）',
   },
+  // plan #20：客户端面补页（静态插件取数通道 / 产物形态 / webServer 前缀与 seat 索引）。
+  {
+    id: 'client-platform-modules',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/web/src/platform.ts',
+    note: 'PLATFORM_MODULES：shell 共享进冻结模块表的基线（react 三项 / cordis / store / ui-slots / ui-primitives / ui-dockkit）',
+  },
+  {
+    id: 'client-bundle-module-loader',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/tsdown.client.ts',
+    note: '客户端 bundle 产物形态 `window.__ModuleLoader__.load({ id, chunk?, factory })` 的生成处',
+  },
+  {
+    id: 'ui-layout-rightbar-slot',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/ui-layout/src/client/index.ts',
+    note: 'root 作用域的 `rightbar` slot 声明与注册（右侧栏根容器）',
+  },
+  {
+    id: 'sidebar-right-seats',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/ui-sidebar-right/src/client/contract/slots.ts',
+    note: '右侧边栏 seat 声明：pane.tab / pane.tab.title / tab.guide / tab.guide.entry / tab.menu.item 与 useTabInfo 信息面',
+  },
+  {
+    id: 'sidebar-right-apply',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/ui-sidebar-right/src/client/index.ts',
+    note: '`rightbar`/`rightbar.session` 注册与子表声明，以及 sidebarRight / sidebarRightTabs 经 ctx.reflect.provide 提供服务面',
+  },
+  {
+    id: 'sidebar-right-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/ui-sidebar-right/README.md',
+    note: '右侧边栏 seat 的官方叙述：类型两段式注册（sidebarRightTabs.register + slots.register）与 guide 条目',
+  },
+  {
+    id: 'sidebar-right-seed',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/ui-sidebar-right/src/client/contract/seed.ts',
+    note: 'guide kind 与默认页解析（registered guide entry 数量决定默认页）',
+  },
+  {
+    id: 'client-connection-api-request-trust',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/connection/src/api-request-trust.ts',
+    note: '/api 的 Host 与 Origin 信任栅栏；plugin 自注册的 webServer 路由默认不走这道门',
+  },
+  {
+    id: 'frontend-static-spa-fallback',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/host/frontend-static/src/index.ts',
+    note: 'SPA fallback 座位：未命中路由落到 dist 静态服务，文件不存在时回 404 空 body',
+  },
 ];
 
 /** A fact that cannot be re-verified because its reference tree is missing. */
