@@ -17,7 +17,8 @@
 
 ## 2. 四步骨架
 
-每次定位都是同一套流程，成本从低到高：
+每次定位都是同一套流程，成本从低到高（**先判断这一步是不是必须做**：能在 agent 侧自证的层先用
+`references/dogfood/client-verification-ladder.md` 的阶梯验掉）：
 
 1. **锁文案 → 定状态**：把用户看到的原文（含语言）当唯一 key，在安装树的 bundle 里反查，
    得到「它等价于哪个内部状态」。例：`resourceUnavailable` ⟺ `useResource(x).status === "none"`
@@ -130,9 +131,12 @@
 > ③ 只替换表达式片段、漏掉行首 `return` → `return return …`。
 > 三次都语法合法或接近合法 ⟹ 唯一可靠的护栏是**语义自检 + 幂等时复验语义**。
 
-## 7. 与另两页的分工
+## 7. 与另三页的分工
 
-- `references/dogfood/runtime-evidence.md`：证据在哪、怎么取（宿主进程输出 / 启动失败报告 / 操作日志 / logger sink）。
+- `references/dogfood/runtime-evidence.md`：证据在哪、怎么取（宿主进程输出 / 启动失败报告 / 操作日志 / logger sink），
+  以及运行时 Inspect 探针的按需下钻纪律。
 - `references/dogfood/runtime-triage.md`：定位顺序、判据与反模式（宿主 / 传输 / 部署层）。
+- `references/dogfood/client-verification-ladder.md`：**agent 自己**能验到哪一层（单元 → 产物形态 → 活 slot →
+  数据层 HTTP 直连）与不可见面清单；本页是它第 5 层的交人侧。
 - 本文：**浏览器客户端**层的取证法与判定矩阵。
-- 三者共用同一条纪律：先锁文案/状态，再谈机制；把已证伪项写下来，下一轮不重查。
+- 四页共用同一条纪律：先锁文案/状态，再谈机制；把已证伪项写下来，下一轮不重查。

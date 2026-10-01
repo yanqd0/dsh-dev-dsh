@@ -806,6 +806,12 @@ const facts: Fact[] = [
     note: '运行时自扩展：动态 Cordis 插件的 Host 侧执行',
   },
   {
+    id: 'extensions-client-runner',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/extensions/cordis-client-runner',
+    note: '动态 Cordis 包的客户端半边：Builtin 符号面（ctx / React / host.call / styles / console）与 client Service / Slots provider',
+  },
+  {
     id: 'session-package-readme',
     source: 'deepseek-harness@dsh-v0.2.0-rc.2',
     path: 'packages/core/session/README.zh.md',
@@ -1974,6 +1980,12 @@ const facts: Fact[] = [
     source: 'deepseek-harness@dsh-v0.2.0-rc.2',
     path: 'packages/host/frontend-static/src/index.ts',
     note: 'SPA fallback 座位：未命中路由落到 dist 静态服务，文件不存在时回 404 空 body',
+  },
+  {
+    id: 'tool-cordis-host-providers',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/extensions/tool-cordis/src/providers.ts',
+    note: 'Host Inspect provider 集合：Service / Event / Config / Tool 及其精确输入（listConfigs 的 entry 与 name 分页）',
   },
 ];
 

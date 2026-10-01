@@ -7,12 +7,13 @@
 
 ## 结构
 
-| 主题                                                    | 页面                                             |
-| ------------------------------------------------------- | ------------------------------------------------ |
-| 环境搭建：装插件、profile 与层序、配置与重启            | `references/dogfood/dogfood-setup.md`            |
-| 日志与运行时取证：日志在哪、怎么要到更多 debug 信息     | `references/dogfood/runtime-evidence.md`         |
-| 成型流程：浏览器端 Console 只读探针、判定矩阵、插桩纪律 | `references/dogfood/client-console-diagnosis.md` |
-| 成型流程：运行时故障的低成本定位法（诊断顺序 + 反模式） | `references/dogfood/runtime-triage.md`           |
+| 主题                                                    | 页面                                               |
+| ------------------------------------------------------- | -------------------------------------------------- |
+| 环境搭建：装插件、profile 与层序、配置与重启            | `references/dogfood/dogfood-setup.md`              |
+| 日志与运行时取证：日志在哪、怎么要到更多 debug 信息     | `references/dogfood/runtime-evidence.md`           |
+| 成型流程：浏览器端 Console 只读探针、判定矩阵、插桩纪律 | `references/dogfood/client-console-diagnosis.md`   |
+| 成型流程：运行时故障的低成本定位法（诊断顺序 + 反模式） | `references/dogfood/runtime-triage.md`             |
+| 客户端验证阶梯：agent 能自证到哪一层、不可见什么        | `references/dogfood/client-verification-ladder.md` |
 
 ## 原则
 

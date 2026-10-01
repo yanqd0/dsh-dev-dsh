@@ -31,7 +31,9 @@ skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无�
 - **`cordis.patch.yml` 是插件的挂载声明**，三条契约（改动前先读文件头注释）：条目必须用 `insert:` 列表包裹（裸 `- id/name` 是覆盖语义）、`config` 必须显式给出（空对象即可）、与 profile 里手写的同 id 条目并存**不报错**——0.1.7-rc.2 是 last-wins 静默复用/替换（旧说法 `duplicate loader entry id` 在 0.1.7-rc.2 已无此抛错，见 issue #16）；该文件必须留在 `files` 随包发布。
 - **`pnpm-workspace.yaml` 的 `allowBuilds: esbuild: true` 勿删**：删掉会让 pnpm 拒跑构建脚本，`install` / `build` 直接失败。
 - **`engines.node >= 22.19`**（tsup `target: node20` 是产物目标，不是运行下限）；CI 统一 node 22。
-- **`0.1.0` 不含客户端 / UI 能力**：不得在本仓文档或 skill 中承诺客户端插件构建（属 `0.2.0`）。
+- **`0.1.0` 不含客户端 bundle 构建能力**：不得在本仓文档或 skill 中承诺客户端插件的构建配方（属 `0.2.0`）；声明、挂载、取数与验证面照常写。
+- **客户端 seat 只索引、不抄契约**：官方功能区 seat 的索引表在 `skill/references/develop/web-ui-plugins.md` 一处，register 选项与 owner props 一律路由到运行时 Inspect（`cordis_inspect_query`），避免与 dsh 本体的生成契约抢权威。
+- **`ctx.webServer` 路由：`prefix` 的 `path` 不带尾斜杠**：注册 `/my-plugin/` 会漏掉 `/my-plugin/x`，请求落 SPA fallback，表现为 200 返回 index.html 或 404 空 body（细节见那页 §7）。
 - **提交风格**：每个逻辑变更独立 commit，Angular / Conventional 前缀 + 中文描述（`feat:` / `fix:` / `docs:` / `chore:` / `ci:`）。
 
 ## issue / 计划管理（mint）
@@ -87,7 +89,7 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 ## 不要做
 
 - 不把 skill 正文写进 `AGENTS.md` / `README.md`：这里只放导航与硬约束；skill 内容归 `skill/`。
-- 不在 `0.1.0` 的文档或 skill 中承诺客户端构建能力。
+- 不在 `0.1.0` 的文档或 skill 中承诺客户端插件的构建配方。
 - 不复制 `notes/evaluation.md` 的结论进 `AGENTS.md`：这里只放导航与硬约束，理由留在原文。
 - 不把 `notes/dsh-old` 当项目内容（本机符号链接）。
 - 不让 `3rdp/` 的缺失成为任何测试、构建或安装的阻塞条件。
