@@ -4,8 +4,8 @@
 **事实 pin**：`deepseek-harness@dsh-v0.2.0-rc.2`。上游权威：`packages/subprocess/subprocess/README.md`（seam 契约）、
 `packages/shell/bash-sandbox/README.md`（confinement 由谁施加）。
 
-工具注册与模型可见面见 `references/develop/tool-plugins.md`；后台任务面见
-`references/develop/peripheral-extensions.md`。
+工具注册与模型可见面见 `references/develop/tool-plugins.md`；不接受本文的信任模型、要自己造一道人门的，见
+`references/develop/approval-and-escalation.md`；后台任务面见 `references/develop/peripheral-extensions.md`。
 
 ## 1. 判据：什么时候是这一类
 
@@ -36,7 +36,8 @@
 
 - **接受这把信任**：把「每次调用都要一次提权审批」换成「一次配置信任」。前提是该命令的危害面可接受，
   且开启与否由 profile 显式决定（不要默认替所有安装方改安全姿态）。
-- **自己造一道门**：工具内按风险分类，命中时经 approval seam（`ctx.approval`）询问。
+- **自己造一道门**：工具内按风险分类，命中时经 approval seam 询问。契约与配方见
+  `references/develop/approval-and-escalation.md`。
 
 `permission-presets` 把这件事收成组合：每个 preset 名 = 一个 sandbox mode + 一个 approval policy
 （`packages/interaction/permission-presets/README.md:32`），所以插件的信任姿态最终由 profile 的 preset 决定。
