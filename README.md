@@ -70,6 +70,7 @@ package.
 package.json          the dsh plugin package
 cordis.patch.yml      bundle patch that mounts the plugin
 src/                  plugin source: the host entry, the skill sync, and their tests
+src/uv/               experimental submodule #1: the host `uv` tool (opt-in, see below)
 skill/                the skill this plugin ships and installs (single source of truth)
 scripts/              build-time skill copy + the postinstall install guard
 notes/                evaluation and decision records
@@ -121,6 +122,40 @@ after editing `src/**`, rebuild `dist` before reloading the plugin.
 
 Note for agent sessions: this command writes `$DSH_HOME/skills`, outside the workspace, so a
 sandboxed run needs one escalation. On Windows, prefer `--copy`.
+
+### Optional: the host `uv` tool (experimental submodule #1)
+
+Under a `workspace-write` file policy, ordinary `uv` work keeps hitting the sandbox: uv writes its
+shared cache and managed installs under `$HOME` (`~/.cache/uv`, `~/.local/share/uv`), every such
+call is denied, and the model retries it with `sandbox_permissions: danger-full-access` — one
+approval per command. The optional `uv` tool removes that loop: it runs `uv` **inside the plugin
+process** through `ctx.subprocess`, which the session file sandbox never sees, and passes argv and
+output through unchanged.
+
+It is **off by default** (`uv.enabled: false`), because it changes the trust boundary: `uv` and its
+children (including anything `uv run` executes) are no longer confined. That is the same widening as
+today's `danger-full-access` retry, except it is configured once instead of confirmed per call.
+
+Enable it in the profile's `cordis.patch.yml` and restart the harness (a running dsh keeps the `dist`
+modules it loaded at boot):
+
+```yaml
+# ~/.dsh/profiles/<profile>/cordis.patch.yml
+- id: dsh-dev-dsh
+  config:
+    uv:
+      enabled: true
+      # entry: ~/.local/bin/uv    # default: `uv` resolved on PATH
+      # timeoutMs: 600000         # per-call wall clock, default 10 minutes
+      # passEnv: [UV_INDEX_URL]   # forward credential-shaped ambient names on demand
+```
+
+A few classes ask first (`self update`, `publish`, `cache clean|prune`, `python install|uninstall`,
+`tool install|uninstall|upgrade`, `auth`, `uv pip --system`, and any `--directory`/`--project`/
+`--cache-dir`/`--config-file`/`cwd` target outside the session workspace) — once per session per
+class, through the same approval seam the bash escalation uses. Without an answerer those classes
+fail closed. The design, the rejected alternatives (in particular why uv's cache directories are
+**not** redirected into the workspace), and the known limits are in [notes/uv.md](notes/uv.md).
 
 ## Publishing
 

@@ -19,6 +19,22 @@
 #    因此两者仍只能留其一，否则配置被静默覆盖、更难排查。
 #
 # 本文件必须列入 package.json 的 `files` 随包发布：dsh 从已安装包的目录读它。
+#
+# 试验性子模块（src/uv/，宿主 `uv` 工具）默认**关闭**：它让 uv 在插件进程内执行、
+# 不受会话文件沙箱约束，属于改变安全姿态的选择，不能随包默认生效。开启方式是在
+# profile 层加一条覆盖行（profile patch 在 bundle 层之后生效，last-wins；同 id 并存
+# 不报错，见第 3 条），改完需重启 harness：
+#
+#   # ~/.dsh/profiles/<profile>/cordis.patch.yml
+#   - id: dsh-dev-dsh
+#     config:
+#       uv:
+#         enabled: true
+#         # entry: ~/.local/bin/uv
+#         # timeoutMs: 600000
+#         # passEnv: [UV_INDEX_URL]
+#
+# 设计、被否决的方案与已知限制见 notes/uv.md。
 # ============================================================================
 
 - insert:

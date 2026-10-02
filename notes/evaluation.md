@@ -265,3 +265,19 @@ name+description 目录，模型用 `skill({name})` 取 body（`packages/skill/t
 - **术语纪律**：领域概念术语以英文原词为准；中英对照只在 `skill/references/dsh/concept-model.md`
   维护，官方定义的权威仍在 `docs/glossary.zh.md` 与 `docs/i18n/terminology.md`（手册只索引、不照抄）。
 - **不变**：0.1.0 仍不含客户端 / UI 构建能力（§8.5 的约束继续有效）；#6 / #7 的历史版本线不重开。
+
+### 8.8 试验性子模块政策与宿主 `uv` 工具（2026-10-02，plan #22）
+
+**决策**：本仓除「skill + 安装它的宿主插件」外，**长期承载试验性、不稳定的子模块**（小插件）：
+先在仓内 dogfood、边界清楚后再剥离为独立插件项目。第一个子模块是 `src/uv/`——宿主 `uv` 工具，
+用来消除 bash 沙箱对 uv 常规操作（写 `~/.cache/uv`）的逐次提权审批。
+
+- **不重定向 uv 的 home 态目录**：`UV_CACHE_DIR` 等能把写入挪进工作区，但会让全局缓存退化为
+  项目级缓存——每个项目各存一份、hardlink 去重失效、全局磁盘占用显著增大；且 `uv tool` 忽略
+  项目级配置。取舍与备选（会话 `danger-full-access`、Auto review、自定义 sandbox provider、
+  bash 提权自动放行门）的完整理由见 `notes/uv.md`。
+- **默认关闭**：`uv.enabled: false`，由 profile 覆盖行显式开启——子模块会改变执行的安全姿态，
+  不能随包默认生效；开启后 `uv` 只经 `ctx.subprocess` 执行，风险操作按同会话首次询问。
+- **子模块纪律**（已写入 `AGENTS.md` 硬约束）：不得使 skill 同步或 profile 启动失败；
+  默认关闭；边界清楚（`src/uv/` 可整目录搬走）。
+- **不变**：skill 仍是核心交付物与单一真源；本子模块不进 skill 正文。

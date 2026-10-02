@@ -9,6 +9,8 @@
 
 skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无关）+ 多级 `references/`，按三大类（插件开发 / dsh 本体 / dogfood 与定位）组织，让 agent 不读 dsh 源码即可开发插件与定位问题；结构契约以 `notes/skill-design.md` 为权威。内容基准 = 本机运行时的 dsh 版本；**具体基准只在 skill 的版本页声明**（`skill/references/dsh/versions/index.md`），本文件不写死版本号（理由见 `notes/evaluation.md` §8.6、§8.7）。
 
+本仓除「skill + 宿主插件」之外，**长期承载试验性、不稳定的子模块**（小插件）：先在仓内 dogfood、边界清楚后再剥离为独立插件项目。第一个是 `src/uv/`（宿主 `uv` 工具），设计与取舍见 `notes/uv.md`。子模块一律**默认关闭**、由 profile 显式开启，且不得让本包既有能力（skill 同步）或 profile 启动失败。
+
 同类项目盘点（本仓项目级文件的写法依据）：
 
 | 仓库          | 项目级文件                                | 形态                                                                                                      |
@@ -35,6 +37,7 @@ skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无�
 - **`0.1.0` 不含客户端 bundle 构建能力**：不得在本仓文档或 skill 中承诺客户端插件的构建配方（属 `0.2.0`）；声明、挂载、取数与验证面照常写。
 - **客户端 seat 只索引、不抄契约**：官方功能区 seat 的索引表在 `skill/references/develop/web-ui-plugins.md` 一处，register 选项与 owner props 一律路由到运行时 Inspect（`cordis_inspect_query`），避免与 dsh 本体的生成契约抢权威。
 - **`ctx.webServer` 路由：`prefix` 的 `path` 不带尾斜杠**：注册 `/my-plugin/` 会漏掉 `/my-plugin/x`，请求落 SPA fallback，表现为 200 返回 index.html 或 404 空 body（细节见那页 §7）。
+- **试验性子模块 #1（`src/uv/`）的硬约束**：默认 `uv.enabled: false`，只有 profile 覆盖行显式开启才注册工具；uv 只经 `ctx.subprocess` 执行，**不自己 `spawn`**；风险分类表是 `src/uv/policy.ts` 的 pinned 常量，改动必须同步单测；注册重名/服务缺失只记一行日志并返回 `{ ok: false }`，**绝不使插件加载失败**；设计取舍与「为什么不重定向 uv 的 home 态目录」以 `notes/uv.md` 为准。
 - **提交风格**：每个逻辑变更独立 commit，Angular / Conventional 前缀 + 中文描述（`feat:` / `fix:` / `docs:` / `chore:` / `ci:`）。
 
 ## issue / 计划管理（mint）
@@ -67,6 +70,7 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 ## 目录与事实来源
 
 - `src/`：插件源码与测试。`index.ts` = 宿主入口（`name` / `Config` / `apply`）；`install-skill.ts` = 同步核心；`install-skill-cli.ts` = postinstall 入口；同目录 `*.test.ts`。
+- `src/uv/`：**试验性子模块 #1**（宿主 `uv` 工具）。`types.ts` = 宿主面的结构化类型切片；`config.ts` = 配置块；`entry.ts` = 可执行入口解析；`policy.ts` = 风险分类（ask 类表 + 越界判定）；`approval.ts` = 同会话授权门；`run.ts` = `ctx.subprocess` 执行与输出/失败面；`tool.ts` = 工具定义与渲染；`index.ts` = 作用域接线；同目录 `*.test.ts`。设计与取舍见 `notes/uv.md`。
 - `dist/`：构建产物（gitignored），只含 `index` / `install-skill` 两个 ESM 入口与 `skill/` 副本。
 - `cordis.patch.yml`：挂载声明（见上「硬约束」），必须随包发布。
 - `scripts/`：`build-skill.mjs`（拷 skill）、`install-skill-postinstall.mjs`（postinstall 守卫：`dist/install-skill.js` 不存在时静默跳过）。
@@ -85,6 +89,7 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `notes/runtime-triage.md`：DSH 运行时故障的低成本定位法（诊断流程 + 反模式清单）；已整理为 skill 分册 `skill/references/dogfood/runtime-triage.md`。
 - `notes/client-console-diagnosis.md`：浏览器客户端层的取证法（Console 只读探针、React fiber 取活状态、判定矩阵、插桩纪律）；已整理为 skill 分册 `skill/references/dogfood/client-console-diagnosis.md`。
 - `notes/resource-preview-protocol-bug.md`：文件/计划预览「不可用」的问题记录（现象 / 根因 / 解决方案；上游 issue 素材）。
+- `notes/uv.md`：试验性子模块 #1（宿主 `uv` 工具）的设计与取舍——现象证据、为什么不用「重定向 uv 的 home 态目录」、工具与审批契约、信任边界、开启方式、已知限制与剥离路径。
 - mint plan / issue：计划与进度真源（本仓当前：milestone `0.1.0`；具体 plan 号以 `mint plan list` 为准，不在此处写死）。
 
 ## 不要做
