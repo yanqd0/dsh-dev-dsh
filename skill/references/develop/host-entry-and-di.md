@@ -38,12 +38,23 @@ Loader 通过 `unwrapExports` 取插件：优先 `exports.default ?? exports`
   这也是"显式 `config`"这条硬约束的真正理由。
 - 默认值、必填、volatile 等写法见 `docs/user/develop/basic/config.zh.md`。
 
-## 3. `inject` 与可选服务
+## 3. `inject`、可选服务与作用域 `inject`
 
-- `inject` 可以是服务名字符串数组，也可以是 `{ [service]: interceptConfig | null }` 映射；
-  Cordis 用它等到服务就绪再激活插件（`packages/AGENTS.md`）。
-- 声明过的服务用 `ctx.<name>`；**可选**服务用 `ctx.get('<name>')`
-  （`ctx.<name>` 的代理是拓扑敏感的，未声明就访问不可靠）。
+依赖声明有三种形态，按「这块能力可不可以缺席」选：
+
+- **模块级 `inject`（必需）**：`inject` 可以是服务名字符串数组，也可以是
+  `{ [service]: interceptConfig | null }` 映射；Cordis 用它等到服务就绪再激活插件
+  （`packages/AGENTS.md`）。
+- **可选服务（`ctx.get`）**：声明过的服务用 `ctx.<name>`；**可选**服务用 `ctx.get('<name>')`
+  （`ctx.<name>` 的代理是拓扑敏感的，未声明就访问不可靠）。`ctx.get(name, strict = true)` 只返回
+  provider 当前 active 的服务（`vendor/cordis/src/reflect.ts:233`）。
+- **作用域 `inject`（子能力可选）**：`ctx.inject(deps, cb)` 等价于在当前上下文里挂一个嵌套 plugin，
+  `cb` 拿到一个注入了这些服务的 scope（`vendor/cordis/src/registry.ts:300`）。
+
+第三种的用途是**让某块子能力可选而不阻塞主插件**：把「跑子进程的工具」放进
+`ctx.inject(['tools', 'subprocess'], …)`，该组合里没有这些服务时这块静默不激活，插件其余部分
+（例如随包同步 skill）照常加载——仓内正例 `src/uv/index.ts`。反过来，如果插件主干本来就离不开某个服务，
+就用模块级 `inject` 让加载失败显性化；别用作用域 `inject` 把缺依赖悄悄吞掉。
 
 ## 4. 注册工具
 

@@ -2204,6 +2204,27 @@ const facts: Fact[] = [
     line: 12,
     note: '需要用户结构化回答时走 ctx.userQuestions.ask；插件不要自造对话框 UI',
   },
+  {
+    id: 'cordis-scoped-inject',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'vendor/cordis/src/registry.ts',
+    line: 300,
+    note: 'ctx.inject(deps, cb) ≡ plugin({ inject, apply: cb })：作用域子能力可选，服务缺失时整块静默不激活',
+  },
+  {
+    id: 'cordis-get-strict',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'vendor/cordis/src/reflect.ts',
+    line: 233,
+    note: 'ctx.get(name, strict = true) 只返回 provider 当前 active 的服务，是可选服务的读法',
+  },
+  {
+    id: 'tool-definition-timeout',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/core/tools/src/index.ts',
+    line: 266,
+    note: 'ToolDefinition.timeoutMs 是协作式超时预算，永不发给模型（schemas 只白名单 name/description/parameters）',
+  },
 ];
 
 /** A fact that cannot be re-verified because its reference tree is missing. */

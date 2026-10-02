@@ -59,7 +59,8 @@ pnpm 拦截依赖构建脚本时，失败的安装在 `pendingBuilds` 里报告�
   匹配依据是条目 id 与覆盖项声明的模块名。agent preset 条目保持只读。
 - **选择组合包层**：修改 `package.json` 的有序 `dsh.profile.bundles`。关闭**保留**依赖；开启则追加到列表末尾，
   因此可能改变配置优先级。home 级 patch 与本次启动的 `--patch` 仍然优先级更高。
-- 变更**跨会话持久**并影响使用该 profile 的所有会话；已安装的 Host 代码在宿主进程内运行，不受工作区沙箱限制。
+- 变更**跨会话持久**并影响使用该 profile 的所有会话；已安装的 Host 代码在宿主进程内运行，不受工作区沙箱限制
+  （开发含义：插件自己的子进程同样不受会话文件沙箱约束，见 `references/develop/subprocess-and-trust.md`）。
 - 已选择但加载失败的组合包仍会出现在 `listBundles` 中并带 `error`：`enabled` 表示**保存的选择**，不代表加载成功。
 - 每次完成的操作发 `plugin-manager/changed`；在管理器之外应用的 patch 代（HMR 监视到 CLI 或手工编辑后）
   **不发**通知，界面要到下一次读取才知道。
