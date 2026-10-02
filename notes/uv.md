@@ -124,4 +124,17 @@ uv 支持 `UV_CACHE_DIR`、`UV_PYTHON_INSTALL_DIR`、`UV_TOOL_DIR`、`UV_TOOL_BI
 
 - 单测：`pnpm test`（含 ask 规则表、越界判定、授权记忆、超时/取消/截断/失败面、注册降级）。
 - 门禁：`pnpm test:coverage`、`pnpm check-types`、`pnpm lint`、`pnpm build`、`pnpm pack:check`。
+- **组合级探针（可复现，worktree 内闭环）**：用隔离 `DSH_HOME`（`.tmp-accept/dsh-home`，gitignored）在 web profile 里按路径挂载 `dist/index.js` 并 `uv.enabled: true`，另加一个探针插件打印 `ctx.tools.schemas()` 并经真实注册表派发工具：
+
+  ```bash
+  DSH_HOME=.tmp-accept/dsh-home dsh web --no-open --port 0
+  # [uv-probe] count=1 names=uv        → 真实组合下已注册
+  # [uv-probe] >>> --version           → uv 0.12.8 (aarch64-unknown-linux-gnu)
+  # [uv-probe] >>> cache dir           → /home/user/.cache/uv（共享缓存保留）
+  # [uv-probe] >>> cache prune         → 未执行：缺少可询问的 agent（fail-closed）
+  # 对照：uv.enabled: false → count=0、uv=ABSENT
+  ```
+
+  这组证据覆盖「注册 → 真实 `ctx.subprocess` 执行 → 共享缓存 → 危险类 fail-closed」；探针脚本与 patch 都在 `.tmp-accept/` 里，不随包发布。
+
 - 活性（需重启 harness）：chromosome 会话中 `["cache","dir"]` 输出 `~/.cache/uv`；`["sync"]`、`["run","pytest","-q"]` 零审批；`["cache","prune"]`/`["publish"]` 各首次一次审批、同会话再调免问；会话日志里 `tool/call.name = "uv"` 且上述零审批命令的 `approval/asked` 计数为 0。
