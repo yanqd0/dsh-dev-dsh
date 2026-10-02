@@ -81,7 +81,11 @@ export async function runUv(request: UvRunRequest): Promise<UvRunResult> {
   try {
     executable = looksLikePath(command)
       ? command
-      : await request.subprocess.resolveExecutable(command, definedEnv(request.env), request.signal);
+      : await request.subprocess.resolveExecutable(
+          command,
+          definedEnv(request.env),
+          request.signal
+        );
   } catch (error) {
     return failure(
       `[uv] 未执行：无法解析 uv 可执行文件（entry=${command}）：${detailOf(error)}\n${UV_ENTRY_HINT}`

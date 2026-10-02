@@ -49,7 +49,8 @@ function scope(init: FakeInit = {}): Captured & { ctx: DshContextLike } {
     },
   };
   const subprocess = {
-    resolveExecutable: (command: string): Promise<string> => Promise.resolve(`/resolved/${command}`),
+    resolveExecutable: (command: string): Promise<string> =>
+      Promise.resolve(`/resolved/${command}`),
     spawn: (spec: SubprocessSpawnSpecLike) => {
       captured.specs.push(spec);
       const [exitCode, signal] = init.outcome ?? [0, null];
@@ -133,9 +134,9 @@ describe('parseUvToolArgs', () => {
 
 describe('renderUvOutcome', () => {
   it('renders stdout alone', () => {
-    expect(
-      renderUvOutcome({ ok: true, exitCode: 0, stdout: 'out\n', stderr: '', notes: [] })
-    ).toBe('out');
+    expect(renderUvOutcome({ ok: true, exitCode: 0, stdout: 'out\n', stderr: '', notes: [] })).toBe(
+      'out'
+    );
   });
 
   it('adds a marked stderr section and the marker lines', () => {
@@ -199,7 +200,10 @@ describe('installUvTool', () => {
       additionalProperties: false,
       required: ['args'],
     });
-    expect(definition?.output.schema).toMatchObject({ type: 'object', additionalProperties: false });
+    expect(definition?.output.schema).toMatchObject({
+      type: 'object',
+      additionalProperties: false,
+    });
     expect(
       definition?.output.render(undefined, {
         ok: true,

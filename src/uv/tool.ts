@@ -11,13 +11,7 @@
 
 import { ensureAskAllowed, createGrantStore, ASK_REJECTED_NOTE } from './approval.js';
 import type { GrantStore } from './approval.js';
-import {
-  cwdEscape,
-  dedupeMatches,
-  findAskMatches,
-  resolveUvCwd,
-  stripUvPrefix,
-} from './policy.js';
+import { cwdEscape, dedupeMatches, findAskMatches, resolveUvCwd, stripUvPrefix } from './policy.js';
 import type { AskMatch } from './policy.js';
 import { runUv } from './run.js';
 import type { UvRunResult } from './run.js';
@@ -84,7 +78,9 @@ type ParseOutcome = { ok: true; value: UvToolArgs } | { ok: false; error: string
 
 /** Narrow an unknown value to a plain record. */
 function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : undefined;
+  return typeof value === 'object' && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
 }
 
 /** Narrow an unknown service to one exposing `method`, or `undefined`. */
@@ -181,7 +177,10 @@ export function renderUvOutcome(value: unknown): string {
 }
 
 /** Build the child environment: forwarded ambient names, then explicit entries. */
-export function buildUvEnv(config: UvConfig, ambient: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
+export function buildUvEnv(
+  config: UvConfig,
+  ambient: NodeJS.ProcessEnv = process.env
+): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {};
   for (const name of config.passEnv) {
     const value = ambient[name];
@@ -245,7 +244,8 @@ export function installUvTool(
           type: 'array',
           items: { type: 'string' },
           minItems: 1,
-          description: 'uv 参数数组，不含 `uv` 本身；如 ["add","numpy"]；任意子命令加 --help 查详情',
+          description:
+            'uv 参数数组，不含 `uv` 本身；如 ["add","numpy"]；任意子命令加 --help 查详情',
         },
         cwd: {
           type: 'string',

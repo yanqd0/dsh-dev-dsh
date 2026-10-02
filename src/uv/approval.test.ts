@@ -29,7 +29,9 @@ function port(outcome: ApprovalOutcomeLike = 'allowed-once'): Port {
 }
 
 /** A full ask context with per-test overrides. */
-function context(overrides: Partial<AskContext> & { port?: Port } = {}): AskContext & { port?: Port } {
+function context(
+  overrides: Partial<AskContext> & { port?: Port } = {}
+): AskContext & { port?: Port } {
   const approvalPort = overrides.port;
   const base: AskContext = {
     approval:

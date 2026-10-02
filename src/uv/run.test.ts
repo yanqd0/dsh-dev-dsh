@@ -45,10 +45,14 @@ function fakeSubprocess(init: FakeInit = {}): {
   const terminate = vi.fn();
   const reads: number[] = [];
   let settleDone: (outcome: { exitCode: number | null; signal: string | null }) => void = () => {};
-  const deferredDone = new Promise<{ exitCode: number | null; signal: string | null }>((resolve) => {
-    settleDone = resolve;
-  });
-  const reader = (stream: FakeStream): { readFrom: (from: number) => SubprocessOutputReadLike } => ({
+  const deferredDone = new Promise<{ exitCode: number | null; signal: string | null }>(
+    (resolve) => {
+      settleDone = resolve;
+    }
+  );
+  const reader = (
+    stream: FakeStream
+  ): { readFrom: (from: number) => SubprocessOutputReadLike } => ({
     readFrom: (from: number): SubprocessOutputReadLike => {
       reads.push(from);
       return {
@@ -77,11 +81,12 @@ function fakeSubprocess(init: FakeInit = {}): {
           stdout: reader(init.stdout ?? { text: '' }),
           stderr: reader(init.stderr ?? { text: '' }),
         },
-        done: init.deferred === true
-          ? deferredDone
-          : init.rejectDone === true
-            ? Promise.reject(new Error('provider failed'))
-            : Promise.resolve(init.outcome ?? { exitCode: 0, signal: null }),
+        done:
+          init.deferred === true
+            ? deferredDone
+            : init.rejectDone === true
+              ? Promise.reject(new Error('provider failed'))
+              : Promise.resolve(init.outcome ?? { exitCode: 0, signal: null }),
         terminate,
       };
     },
@@ -143,9 +148,7 @@ describe('runUv: spawning', () => {
 
   it('reports a missing path entry with the actionable hint', async () => {
     const fake = fakeSubprocess();
-    const result = await runUv(
-      request({ subprocess: fake.subprocess, entry: '/nope/uv' })
-    );
+    const result = await runUv(request({ subprocess: fake.subprocess, entry: '/nope/uv' }));
     expect(fake.specs).toHaveLength(0);
     expect(result.ok).toBe(false);
     expect(result.exitCode).toBe(-1);
@@ -232,9 +235,7 @@ describe('runUv: deadlines and cancellation', () => {
     const controller = new AbortController();
     controller.abort();
     const fake = fakeSubprocess();
-    const result = await runUv(
-      request({ subprocess: fake.subprocess, signal: controller.signal })
-    );
+    const result = await runUv(request({ subprocess: fake.subprocess, signal: controller.signal }));
     expect(fake.specs).toHaveLength(0);
     expect(result.notes).toEqual(['[stopped: tool call aborted]']);
   });
@@ -248,10 +249,7 @@ describe('runUv: deadlines and cancellation', () => {
     controller.abort();
     fake.settle({ exitCode: null, signal: 'SIGKILL' });
     const result = await run;
-    expect(result.notes).toEqual([
-      '[stopped: tool call aborted]',
-      '[killed by signal: SIGKILL]',
-    ]);
+    expect(result.notes).toEqual(['[stopped: tool call aborted]', '[killed by signal: SIGKILL]']);
   });
 });
 
