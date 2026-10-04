@@ -239,7 +239,7 @@ export function installKeyboardClient(
 /** Wire the observer and the reference row against an injected scope. */
 function installKeyboardInScope(scope: ClientContextLike): void {
   const shortcuts = asShortcuts(scope.get('shortcuts'));
-  const windowLike = asWindow(scope.get('window'));
+  const windowLike = asWindow(scope.get('window') ?? globalThis);
   if (shortcuts === undefined || windowLike === undefined) {
     warn('window or shortcuts service is unavailable; prompt-card keys stay unwired');
     return;
@@ -314,7 +314,13 @@ function asShortcuts(value: unknown): ShortcutsLike | undefined {
   return value as ShortcutsLike;
 }
 
-/** Narrow an unknown value to the window slice this submodule uses. */
+/**
+ * Narrow an unknown value to the window slice this submodule uses.
+ *
+ * The browser page's `window` is the realm's global object, not a cordis
+ * service (`@deepseek-ai/dsh-client-shortcuts` reads the same global), so the
+ * caller passes `globalThis` and a test may pass its injected surface instead.
+ */
 function asWindow(value: unknown): WindowLike | undefined {
   if (typeof value !== 'object' || value === null) return undefined;
   const document = (value as { document?: unknown }).document;

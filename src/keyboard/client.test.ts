@@ -353,6 +353,26 @@ describe('browser-half installation', () => {
     expect(registerFixed).toHaveBeenCalledTimes(1);
   });
 
+  it('reads the page window from the global object when no service provides one', () => {
+    const observed = vi.fn<(input: ShortcutFixedInputLike) => () => void>(() => () => {});
+    const registerFixed = vi.fn(() => () => {});
+    const { ctx, effects } = activatingContext({
+      shortcuts: { observeFixedInput: observed, registerFixed },
+    });
+    expect(installKeyboardClient(ctx, enabled)).toEqual({ ok: true });
+    const dispose = at(effects, 0)();
+    expect(observed).toHaveBeenCalledTimes(1);
+    expect(typeof dispose).toBe('function');
+  });
+
+  it('warns and stays inert when the shortcuts service is not on the scope', () => {
+    const warnings = captureWarnings();
+    const { ctx, effects } = activatingContext({});
+    expect(installKeyboardClient(ctx, enabled)).toEqual({ ok: true });
+    expect(effects).toEqual([]);
+    expect(warnings.join('\n')).toContain('[dsh-dev-dsh/keyboard]');
+  });
+
   it('reports a duplicate reference row without failing the installation', () => {
     const warnings = captureWarnings();
     const registerFixed = vi.fn(() => {
