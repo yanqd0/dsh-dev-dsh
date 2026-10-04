@@ -14,16 +14,17 @@
 2. `references/dsh/plugin-model.md`：运行时原理（服务、事件、可逆副作用、生命周期）。
 3. `references/dsh/extension-points.md`：扩展点判据（事件域、capability seam、scope）。
 4. `references/dsh/design-principles.md`：不变式与设计准则（写码时不能违反什么）。
-5. `references/dsh/composition-and-boot.md`：组装与启动链路（层序、loader 条目树、激活与失败判定）。
-6. `references/dsh/plugin-management.md`：运行期插件管理（安装、启停、reconcile、豁免、重载）。
-7. `references/dsh/client-loading.md`：客户端装载（声明、启动图、combo 路由、两阶段启动）。
-8. `references/dsh/session-log.md`：会话日志与派生上下文（事件词汇、surface、`deriveMessages()`、插件扩展点）。
-9. `references/dsh/persistence-and-format.md`：持久化、崩溃恢复与格式版本（seam / 句柄、flush 屏障、迁移链）。
-10. `references/dsh/concept-model.md`：概念模型（DDD 映射 + 中英对照 + 关系图）。
-11. `references/dsh/domain-vocabulary.md`：官方术语索引（权威在哪、按域分组、相互关系）。
-12. `references/dsh/modules/index.md`：模块 / 子系统索引（逐组外部契约；A/B 批已就位，其余批次见覆盖表）。
-13. `references/dsh/plugins/index.md`：内置 plugin 位置与冲突语义（哪些位置已经被占）。
-14. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
+5. `references/dsh/delegation-and-parallelism.md`：委派与并行（subagent / workflow 通道、并行发生在哪一层、子级拿到什么 context）。
+6. `references/dsh/composition-and-boot.md`：组装与启动链路（层序、loader 条目树、激活与失败判定）。
+7. `references/dsh/plugin-management.md`：运行期插件管理（安装、启停、reconcile、豁免、重载）。
+8. `references/dsh/client-loading.md`：客户端装载（声明、启动图、combo 路由、两阶段启动）。
+9. `references/dsh/session-log.md`：会话日志与派生上下文（事件词汇、surface、`deriveMessages()`、插件扩展点）。
+10. `references/dsh/persistence-and-format.md`：持久化、崩溃恢复与格式版本（seam / 句柄、flush 屏障、迁移链）。
+11. `references/dsh/concept-model.md`：概念模型（DDD 映射 + 中英对照 + 关系图）。
+12. `references/dsh/domain-vocabulary.md`：官方术语索引（权威在哪、按域分组、相互关系）。
+13. `references/dsh/modules/index.md`：模块 / 子系统索引（逐组外部契约；A/B 批已就位，其余批次见覆盖表）。
+14. `references/dsh/plugins/index.md`：内置 plugin 位置与冲突语义（哪些位置已经被占）。
+15. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
 
 ## 纪律
 

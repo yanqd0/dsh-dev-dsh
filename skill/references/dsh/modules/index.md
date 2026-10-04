@@ -58,6 +58,8 @@
 
 - 层的划分与依赖方向：`references/dsh/architecture.md`（组清单不在这里复制）。
 - 逐组外部契约：本册。
+- 跨组的委派与并行机制（`subagent` + `workflow` + loop 调度）：`references/dsh/delegation-and-parallelism.md`
+  ——D 批的 `subagent` / `workflow` 模块页只补各组自己的对外契约，机制不在本册重写。
 - 能力位置是否被占、冲突语义：`references/dsh/plugins/index.md`。
 - 新行为该放哪（判据）：`references/dsh/extension-points.md` §1 与 §4。
 
