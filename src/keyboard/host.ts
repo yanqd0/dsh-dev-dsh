@@ -2,14 +2,29 @@
  * The `keyboard` submodule's host-face wiring.
  *
  * The behaviour lives in the browser half (`src/keyboard/client.ts`), which the
- * client module system loads whenever this package declares `dsh.client` —
- * there is no host-side route to enable or disable it per session, and the
- * authority for the switch is the profile patch's last-wins override of this
- * plugin's `config`. This module therefore only records the decision: a disabled
- * submodule wires nothing and never fails the plugin load.
+ * client module system loads whenever this package declares `dsh.client`. Two
+ * facts shape this module:
+ *
+ * - **The browser cannot read the mount line.** A client entry receives only the
+ *   config the Loader happens to hand it, so the host publishes the validated
+ *   switch as a page global through `webserver/index-inject` — exactly how
+ *   `@deepseek-ai/dsh-client-shortcuts` publishes `__DSH_SHORTCUTS_CONFIG__`.
+ * - **A missing web server is not an error.** Headless and CLI profiles have no
+ *   page to patch; the submodule then wires nothing and the plugin still loads.
  */
 
+import type { DshContextLike } from '../uv/types.js';
 import type { KeyboardConfig } from './config.js';
+
+/** The page global the browser half reads its switch from. */
+export const KEYBOARD_CONFIG_GLOBAL = '__DSH_DEV_DSH_KEYBOARD__';
+
+/** One page-injection row, as `webserver/index-inject` subscribers push it. */
+export interface IndexInjectionRow {
+  kind: 'global';
+  name: string;
+  value: unknown;
+}
 
 /** Outcome of the wiring step (observable in tests). */
 export interface KeyboardInstallOutcome {
@@ -17,14 +32,24 @@ export interface KeyboardInstallOutcome {
   reason?: string | undefined;
 }
 
+/** The injection table a web server hands to every subscriber. */
+type InjectionTable = IndexInjectionRow[];
+
+/** The optional web-server slice this submodule subscribes to. */
+interface IndexInjectorLike {
+  on(event: 'webserver/index-inject', listener: (table: InjectionTable) => void): unknown;
+}
+
 /**
- * Record the `keyboard` submodule's state for one host context.
+ * Publish the `keyboard` submodule's switch to the pages this host serves.
  *
- * @param config - the submodule config; a disabled submodule wires nothing.
+ * @param ctx - the plugin's root context.
+ * @param config - the validated submodule config; a disabled submodule publishes nothing.
  * @param log - one-line sink used to report the disabled state to the host log.
  * @returns the wiring outcome; it never throws.
  */
 export function installKeyboard(
+  ctx: DshContextLike,
   config: KeyboardConfig,
   log?: (message: string) => void
 ): KeyboardInstallOutcome {
@@ -32,9 +57,27 @@ export function installKeyboard(
     log?.(KEYBOARD_DISABLED_NOTE);
     return { ok: true, reason: 'disabled' };
   }
-  // Enabled: the browser half is already part of this package's client bundle,
-  // so there is nothing left to install on the host face.
+  try {
+    const injector = asIndexInjector(ctx.get('webserver'));
+    if (injector === undefined) {
+      return { ok: false, reason: 'no webserver in this composition' };
+    }
+    injector.on('webserver/index-inject', (table) => {
+      table.push({ kind: 'global', name: KEYBOARD_CONFIG_GLOBAL, value: { enabled: true } });
+    });
+  } catch (error) {
+    // Wiring itself failed (not a service outage): report, never break load.
+    return { ok: false, reason: error instanceof Error ? error.message : String(error) };
+  }
   return { ok: true };
+}
+
+/** Narrow an optional service to the index-injection slice this submodule uses. */
+function asIndexInjector(value: unknown): IndexInjectorLike | undefined {
+  if (typeof value !== 'object' || value === null) return undefined;
+  return typeof (value as { on?: unknown }).on === 'function'
+    ? (value as IndexInjectorLike)
+    : undefined;
 }
 
 /** Why the browser half does nothing today, and how to turn it on. */

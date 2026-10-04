@@ -48,6 +48,23 @@ export const Config = z.object({
 export type Config = z.infer<typeof Config>;
 
 /**
+ * One-line host log sink for submodule notes.
+ *
+ * @param ctx - the plugin's host context; hosts that expose no logger stay silent.
+ * @returns the sink to pass down, or `undefined`.
+ */
+function hostLog(ctx: DshContextLike): ((message: string) => void) | undefined {
+  const logger = ctx.get('logger');
+  if (typeof logger !== 'object' || logger === null) return undefined;
+  const warn = (logger as { warn?: unknown }).warn;
+  return typeof warn === 'function'
+    ? (message: string) => {
+        (warn as (m: string) => void).call(logger, message);
+      }
+    : undefined;
+}
+
+/**
  * cordis plugin entry. Never throws: a failing submodule reports itself and
  * leaves the rest of the plugin (the skill sync) working.
  */
@@ -56,5 +73,5 @@ export function apply(ctx: DshContextLike, config: Config): void {
     installSkill();
   }
   installUv(ctx, config.uv);
-  installKeyboard(config.keyboard);
+  installKeyboard(ctx, config.keyboard, hostLog(ctx));
 }

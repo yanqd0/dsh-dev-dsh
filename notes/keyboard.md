@@ -49,9 +49,14 @@ dsh Web GUI 里，授权卡、方案复核卡、用户问题卡都会**接管 co
   （`window.__ModuleLoader__.load({ id, factory })` + 显式 `exports.apply` / `exports.inject`），
   形状对齐官方产物 `@deepseek-ai/dsh-client-ui-approval/lib/client.js`。构建脚本自检产物必须带注册调用、id、`factory:`、两个导出，
   且不是 ES module —— 不合格就非零退出。
-- **开关**：宿主 `Config` 加 `keyboard.enabled`（默认 false），但浏览器读不到挂载行，
-  所以 `keyboard.enabled` 由**浏览器半边自己判定**（`src/client-entry.ts` 的 `keyboardEnabled`）：
-  关闭时 entry 直接返回、不订阅、不移焦。开启方式：
+- **开关怎么进浏览器**（踩过的坑）：客户端 entry **拿不到挂载行的 `config`**——
+  实测 `apply(ctx, cfg)` 里的 `cfg` 不含 `keyboard`，于是半边一直读到 `enabled: false`、
+  彻底静默。官方的做法是宿主半边订阅 `webserver/index-inject` 往页面注入一个 global
+  （`@deepseek-ai/dsh-client-shortcuts` 注入 `__DSH_SHORTCUTS_CONFIG__`）；
+  `src/keyboard/host.ts` 照此注入 `__DSH_DEV_DSH_KEYBOARD__`，
+  `src/client-entry.ts` 的 `keyboardEnabled` 优先读它、其次才读 Loader 传的 `cfg`。
+  没有 web server 的组合（headless/CLI）不注册、只返回 `{ ok: false, reason: 'no webserver…' }`，插件照常加载。
+  开启方式：
 
   ```yaml
   # ~/.dsh/profiles/<profile>/cordis.patch.yml
@@ -61,7 +66,9 @@ dsh Web GUI 里，授权卡、方案复核卡、用户问题卡都会**接管 co
         enabled: true
   ```
 
-  改完必须**重启 harness 并刷新页面**：client bundle 由宿主进程启动时读盘下发，浏览器要重新拉取。
+  改完必须**重启 harness 并刷新页面**：注入表与 client bundle 都由宿主进程启动时定型，
+  浏览器要重新拉取。生效的机械判据：`curl` 带 token 取 `/` 时应能在 HTML 里搜到
+  `__DSH_DEV_DSH_KEYBOARD__`（宿主已注入），且 `plugins/??@yanqd0/dsh-dev-dsh/client.js` 与 `dist/client.js` 同源。
 
 ## 4. 契约与上游耦合面
 
@@ -88,8 +95,10 @@ dsh Web GUI 里，授权卡、方案复核卡、用户问题卡都会**接管 co
 
 - `src/keyboard/dom.test.ts`：卡识别、忙/只读/惰性卡片、默认动作三级候选、选项采集。
 - `src/keyboard/client.test.ts`：Enter / ↑↓ 行为、守卫矩阵、移焦策略（`shouldFocusOnAppear`）、首次出现移焦一次、服务降级与重复注册不致命。
-- `src/keyboard/client-bundle.test.ts`：把 `dist/client.js` 放进 `vm` 沙箱、注入假的 `window.__ModuleLoader__`，
-  验证注册 id、`apply` / `inject` 导出与启用/关闭两条路径（`dist/` 不存在时自跳过）。
+- `src/keyboard/host.test.ts`：注入行的形状、无 web server 的 compose、订阅失败不致命。
+- `src/client-entry.test.ts`：开关解析（page global 优先、`cfg` 兜底、非显式 true 一律关闭）。
+- `src/keyboard/client-bundle.test.ts`：把 `dist/client.js` 当经典脚本在本 realm 里执行（`window` 换成假 facade、`globalThis` 即页面全局），
+  验证注册 id、`apply` / `inject` 导出，以及**从注入 global 打开**与关闭两条路径（`dist/` 不存在时自跳过）。
 - 命令：`pnpm test && pnpm check-types && pnpm lint && pnpm build && pnpm pack:check`。
 
 ## 7. 剥离路径

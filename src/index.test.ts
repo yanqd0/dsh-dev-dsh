@@ -31,11 +31,36 @@ describe('dsh-dev-dsh plugin entry', () => {
     expect(name).toBe('dsh-dev-dsh');
   });
 
-  it('defaults autoInstallSkill to true and the uv submodule to off', () => {
+  it('defaults autoInstallSkill to true and both experimental submodules to off', () => {
     const config = Config.parse({});
     expect(config.autoInstallSkill).toBe(true);
     expect(config.uv.enabled).toBe(false);
     expect(config.uv.grant).toBe('session');
+    expect(config.keyboard.enabled).toBe(false);
+  });
+
+  it('publishes the keyboard switch to served pages when the profile enables it', () => {
+    const rows: { kind: string; name: string; value: unknown }[] = [];
+    const listeners: ((table: typeof rows) => void)[] = [];
+    const fake = host();
+    apply(
+      {
+        ...fake.ctx,
+        get: (name) =>
+          name === 'webserver'
+            ? {
+                on: (_event: string, listener: (table: typeof rows) => void) => {
+                  listeners.push(listener);
+                },
+              }
+            : undefined,
+      },
+      Config.parse({ keyboard: { enabled: true } })
+    );
+    for (const listener of listeners) listener(rows);
+    expect(rows).toEqual([
+      { kind: 'global', name: '__DSH_DEV_DSH_KEYBOARD__', value: { enabled: true } },
+    ]);
   });
 
   it('syncs the bundled skill on load', () => {

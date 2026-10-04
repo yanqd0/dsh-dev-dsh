@@ -11,10 +11,6 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/**/*.ts'],
-      // `src/client-entry.ts` is a build-only browser entry: Node never executes
-      // it, and `src/keyboard/client-bundle.test.ts` verifies its reachable path
-      // from the built `dist/client.js` instead.
-      exclude: ['src/client-entry.ts'],
       reporter: ['text', 'lcov'],
       thresholds: {
         lines: 80,
