@@ -71,11 +71,13 @@ package.json          the dsh plugin package
 cordis.patch.yml      bundle patch that mounts the plugin
 src/                  plugin source: the host entry, the skill sync, and their tests
 src/uv/               experimental submodule #1: the host `uv` tool (opt-in, see below)
+src/keyboard/         experimental submodule #2: the prompt-card Enter/arrow-key client half
+src/client-entry.ts   browser-half entry; scripts/build-client.mjs wraps it into dist/client.js
 skill/                the skill this plugin ships and installs (single source of truth)
-scripts/              build-time skill copy + the postinstall install guard
+scripts/              build-time client bundle + skill copy + the postinstall install guard
 notes/                evaluation and decision records
 
-dist/                 build output (gitignored): the ESM entries, their types, and a copy of skill/
+dist/                 build output (gitignored): the ESM entries, client.js, their types, and a copy of skill/
 dist/skill/           what actually ships and gets installed
 ```
 
@@ -156,6 +158,40 @@ A few classes ask first (`self update`, `publish`, `cache clean|prune`, `python 
 class, through the same approval seam the bash escalation uses. Without an answerer those classes
 fail closed. The design, the rejected alternatives (in particular why uv's cache directories are
 **not** redirected into the workspace), and the known limits are in [notes/uv.md](notes/uv.md).
+
+### Optional: prompt-card keys (experimental submodule #2)
+
+Every prompt card in the Web GUI — the approval card, the plan review, a
+`ask_user_question` card — takes over the composer **without taking focus**, and
+each one binds its keyboard behaviour to elements that must already be focused
+(the approval card gates its handler on `currentTarget.contains(document.activeElement)`;
+the plan-review and question cards only listen on their buttons). With focus on
+`document.body`, Enter therefore does nothing at all on those cards.
+
+The optional `keyboard` submodule fills exactly that gap from the browser side,
+through the shortcut service's already-arbitrated fixed input: Enter triggers the
+card's default action (allow once / Approve / submit the preselected option), ↑/↓
+move focus between the card's options, and a newly rendered card takes focus once.
+It never consumes the gesture, so upstream behaviour stays authoritative wherever
+it exists, and it stays out of modals, editable regions, and terminals.
+
+It is **off by default** (`keyboard.enabled: false`), because it changes what
+Enter and the arrow keys mean inside those cards:
+
+```yaml
+# ~/.dsh/profiles/<profile>/cordis.patch.yml
+- id: dsh-dev-dsh
+  config:
+    keyboard:
+      enabled: true
+```
+
+Unlike the `uv` tool, this switch is evaluated by the **browser half** (the
+browser cannot read the mount line), so enabling it requires a harness restart
+**and** a page refresh — `dist/client.js` is read from disk when the host process
+starts. No profile row is needed for the browser half itself: declaring
+`dsh.client` in `package.json` is enough. The design, the upstream contracts it
+depends on, and the known limits are in [notes/keyboard.md](notes/keyboard.md).
 
 ## Publishing
 

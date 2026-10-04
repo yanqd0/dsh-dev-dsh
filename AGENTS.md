@@ -9,7 +9,7 @@
 
 skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无关）+ 多级 `references/`，按三大类（插件开发 / dsh 本体 / dogfood 与定位）组织，让 agent 不读 dsh 源码即可开发插件与定位问题；结构契约以 `notes/skill-design.md` 为权威。内容基准 = 本机运行时的 dsh 版本；**具体基准只在 skill 的版本页声明**（`skill/references/dsh/versions/index.md`），本文件不写死版本号（理由见 `notes/evaluation.md` §8.6、§8.7）。
 
-本仓除「skill + 宿主插件」之外，**长期承载试验性、不稳定的子模块**（小插件）：先在仓内 dogfood、边界清楚后再剥离为独立插件项目。第一个是 `src/uv/`（宿主 `uv` 工具），设计与取舍见 `notes/uv.md`。子模块一律**默认关闭**、由 profile 显式开启，且不得让本包既有能力（skill 同步）或 profile 启动失败。
+本仓除「skill + 宿主插件」之外，**长期承载试验性、不稳定的子模块**（小插件）：先在仓内 dogfood、边界清楚后再剥离为独立插件项目。第一个是 `src/uv/`（宿主 `uv` 工具，见 `notes/uv.md`），第二个是 `src/keyboard/`（提示卡 Enter/↑↓ 补位的客户端半边，见 `notes/keyboard.md`）。子模块一律**默认关闭**、由 profile 显式开启，且不得让本包既有能力（skill 同步）或 profile 启动失败。
 
 同类项目盘点（本仓项目级文件的写法依据）：
 
@@ -34,10 +34,11 @@ skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无�
 - **`cordis.patch.yml` 是插件的挂载声明**，三条契约（改动前先读文件头注释）：条目必须用 `insert:` 列表包裹（裸 `- id/name` 是覆盖语义）、`config` 必须显式给出（空对象即可）、与 profile 里手写的同 id 条目并存**不报错**——0.1.7-rc.2 是 last-wins 静默复用/替换（旧说法 `duplicate loader entry id` 在 0.1.7-rc.2 已无此抛错，见 issue #16）；该文件必须留在 `files` 随包发布。
 - **`pnpm-workspace.yaml` 的 `allowBuilds: esbuild: true` 勿删**：删掉会让 pnpm 拒跑构建脚本，`install` / `build` 直接失败。
 - **`engines.node >= 22.19`**（tsup `target: node20` 是产物目标，不是运行下限）；CI 统一 node 22。
-- **`0.1.0` 不含客户端 bundle 构建能力**：不得在本仓文档或 skill 中承诺客户端插件的构建配方（属 `0.2.0`）；声明、挂载、取数与验证面照常写。
+- **`0.1.0` 不含客户端 bundle 构建能力**：不得在本仓文档或 skill 中承诺客户端插件的构建配方（属 `0.2.0`）；声明、挂载、取数与验证面照常写。**例外（有意留痕）**：`src/keyboard/` 是本包**自用**的客户端半边，产物 `dist/client.js` 由仓内 `scripts/build-client.mjs` 手搓 loader wrapper 生成——这条例外不构成「可复用构建配方」，`0.2.0` 的门类规划不变（见 `notes/keyboard.md`）。
 - **客户端 seat 只索引、不抄契约**：官方功能区 seat 的索引表在 `skill/references/develop/web-ui-plugins.md` 一处，register 选项与 owner props 一律路由到运行时 Inspect（`cordis_inspect_query`），避免与 dsh 本体的生成契约抢权威。
 - **`ctx.webServer` 路由：`prefix` 的 `path` 不带尾斜杠**：注册 `/my-plugin/` 会漏掉 `/my-plugin/x`，请求落 SPA fallback，表现为 200 返回 index.html 或 404 空 body（细节见那页 §7）。
 - **试验性子模块 #1（`src/uv/`）的硬约束**：默认 `uv.enabled: false`，只有 profile 覆盖行显式开启才注册工具；uv 只经 `ctx.subprocess` 执行，**不自己 `spawn`**；风险分类表是 `src/uv/policy.ts` 的 pinned 常量，改动必须同步单测；注册重名/服务缺失只记一行日志并返回 `{ ok: false }`，**绝不使插件加载失败**；设计取舍与「为什么不重定向 uv 的 home 态目录」以 `notes/uv.md` 为准。
+- **试验性子模块 #2（`src/keyboard/`）的硬约束**：默认 `keyboard.enabled: false`（且该开关由**浏览器半边**判定——浏览器读不到挂载行）；浏览器半边不 import 任何 `@deepseek-ai/*` 值、不请求 module-table 词；`observeFixedInput` 只补「无卡外焦点」的缺口，**不 `consume()`**、不改上游行为；服务缺失/重复 id 只记一行 warn，**绝不使整页启动失败**；产物 `dist/client.js` 由 `scripts/build-client.mjs` 生成并自检，产物契约与上游耦合面以 `notes/keyboard.md` 为准。
 - **提交风格**：每个逻辑变更独立 commit，Angular / Conventional 前缀 + 中文描述（`feat:` / `fix:` / `docs:` / `chore:` / `ci:`）。
 
 ## issue / 计划管理（mint）
@@ -58,7 +59,7 @@ skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无�
 
 ```bash
 pnpm install            # 安装依赖（allowBuilds 已放行 esbuild）
-pnpm build              # tsup → dist/，随后 scripts/build-skill.mjs 把 skill/ 拷为 dist/skill
+pnpm build              # tsup → dist/；再 scripts/build-client.mjs 出 dist/client.js；最后拷 skill/ 为 dist/skill
 pnpm test               # vitest（不跑 coverage，无阈值检查）
 pnpm test:coverage      # vitest + coverage：lines/functions/statements 80、branches 70（真正的门禁）
 pnpm check-types        # tsc --noEmit
@@ -71,9 +72,10 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 
 - `src/`：插件源码与测试。`index.ts` = 宿主入口（`name` / `Config` / `apply`）；`install-skill.ts` = 同步核心；`install-skill-cli.ts` = postinstall 入口；同目录 `*.test.ts`。
 - `src/uv/`：**试验性子模块 #1**（宿主 `uv` 工具）。`types.ts` = 宿主面的结构化类型切片；`config.ts` = 配置块；`entry.ts` = 可执行入口解析；`policy.ts` = 风险分类（ask 类表 + 越界判定）；`approval.ts` = 同会话授权门；`run.ts` = `ctx.subprocess` 执行与输出/失败面；`tool.ts` = 工具定义与渲染；`index.ts` = 作用域接线；同目录 `*.test.ts`。设计与取舍见 `notes/uv.md`。
-- `dist/`：构建产物（gitignored），只含 `index` / `install-skill` 两个 ESM 入口与 `skill/` 副本。
+- `src/keyboard/`：**试验性子模块 #2**（提示卡 Enter/↑↓ 补位的客户端半边）。`types.ts` = 结构类型切片（**不得** import `@deepseek-ai/*`）；`dom.ts` = 卡片判定（默认动作/选项/活动卡）；`client.ts` = 按键语义与首次出现移焦；`config.ts` / `host.ts` = 宿主侧开关；`test-support.ts` = jsdom 桥接（测试件）；`client-entry.ts` = 打包入口；同目录 `*.test.ts`。设计与取舍见 `notes/keyboard.md`。
+- `dist/`：构建产物（gitignored），含 `index` / `install-skill` 两个 ESM 入口、**客户端半边 `client.js`** 与 `skill/` 副本。
 - `cordis.patch.yml`：挂载声明（见上「硬约束」），必须随包发布。
-- `scripts/`：`build-skill.mjs`（拷 skill）、`install-skill-postinstall.mjs`（postinstall 守卫：`dist/install-skill.js` 不存在时静默跳过）。
+- `scripts/`：`build-skill.mjs`（拷 skill）、`build-client.mjs`（esbuild 打包客户端半边 + 手写 `window.__ModuleLoader__.load` wrapper 并自检产物）、`install-skill-postinstall.mjs`（postinstall 守卫：`dist/install-skill.js` 不存在时静默跳过）。
 - `skill/`：skill 单一真源。`SKILL.md` = **L0 薄入口**（使用协议、插件分类轴、三类路由、L1 索引表；不含上游路径 / 版本号 / pin）；`references/<大类>/index.md` = 大类入口（当前 `develop`、`dsh`、`dogfood`），再往下是页面与占位索引，层级与契约见 `notes/skill-design.md`。正文引用上游路径必须同步登记 fact；占位页转正式时必须删掉占位标记。
 - `notes/evaluation.md`：方向评估与决策记录（含 §8 决策、§8.5 版本规划、§8.6 skill 定位修订），是「为什么这样定位」的权威来源；`notes/skill-design.md` 是 skill 结构契约的权威（层级 / 命名 / 索引与引用 / 版本维度 / 占位纪律 / 演进步骤）；`notes/dsh-old/` 是指向 `../../my-agents/notes/dsh` 的**本机符号链接**，在别的机器上是 dangling，不作为项目内容。
 - `3rdp/`：**开发期本地参考**，gitignored。当前只有 dsh 代码库的只读快照（`deepseek-harness`），用于源码考古；**测试 / 生产（用户环境安装）下默认不存在，且不存在时构建、运行、`pnpm test` 全部正常**。未来可能增补其它参考（如 cordis，是否纳入待评估）；增补时须同步 `src/facts.test.ts` 的 fact 清单。
@@ -90,6 +92,7 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `notes/client-console-diagnosis.md`：浏览器客户端层的取证法（Console 只读探针、React fiber 取活状态、判定矩阵、插桩纪律）；已整理为 skill 分册 `skill/references/dogfood/client-console-diagnosis.md`。
 - `notes/resource-preview-protocol-bug.md`：文件/计划预览「不可用」的问题记录（现象 / 根因 / 解决方案；上游 issue 素材）。
 - `notes/uv.md`：试验性子模块 #1（宿主 `uv` 工具）的设计与取舍——现象证据、为什么不用「重定向 uv 的 home 态目录」、工具与审批契约、信任边界、开启方式、已知限制与剥离路径。
+- `notes/keyboard.md`：试验性子模块 #2（提示卡 Enter/↑↓ 补位客户端半边）的设计与取舍——三张卡的焦点缺口证据、为什么否决 patch/重写、声明与挂载、开关为何在浏览器侧、上游耦合面与重核清单、已知限制与剥离路径。
 - mint plan / issue：计划与进度真源（本仓当前：milestone `0.1.0`；具体 plan 号以 `mint plan list` 为准，不在此处写死）。
 
 ## 不要做

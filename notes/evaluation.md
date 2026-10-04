@@ -236,6 +236,11 @@ name+description 目录，模型用 `skill({name})` 取 body（`packages/skill/t
 **关键约束**：0.1.0 不含客户端/UI 能力，因此 0.1.0 的 skill 只覆盖宿主面，
 **不得**在 0.1.0 文档中承诺客户端插件构建——避免与 0.2.0 的实际能力错位。
 
+> **例外（2026-10，plan #24）**：`src/keyboard/`（提示卡 Enter/↑↓ 补位的客户端半边，见
+> `notes/keyboard.md`）是这条例外的唯一实例：产物由仓内 `scripts/build-client.mjs` 手搓 loader
+> wrapper 生成，属**本包自用**，不构成可复用构建配方——「客户端构建属 0.2.0」应读作
+> 「**对外可复用**的客户端构建配方属 0.2.0」。0.1.0 的 skill 仍只覆盖宿主面，门类规划不变。
+
 ### 8.6 skill 定位修订（2026-09-29，plan #5）
 
 **决策**：skill 从「只补官方空白」升级为**外置 dsh 开发手册**——让 agent 不读 dsh 源码

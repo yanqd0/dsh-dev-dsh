@@ -35,6 +35,21 @@
 #         # passEnv: [UV_INDEX_URL]
 #
 # 设计、被否决的方案与已知限制见 notes/uv.md。
+#
+# 试验性子模块 #2（src/keyboard/，客户端半边）同样默认**关闭**：它改变提示卡上
+# Enter / ↑↓ 的语义，属改变交互姿态的选择。开启方式是在 profile 层加同一条覆盖行：
+#
+#   # ~/.dsh/profiles/<profile>/cordis.patch.yml
+#   - id: dsh-dev-dsh
+#     config:
+#       keyboard:
+#         enabled: true
+#
+# 与 uv 不同，这个开关由**浏览器半边**判定（浏览器读不到挂载行，见
+# src/client-entry.ts 的 keyboardEnabled）：关闭时 entry 直接返回，不订阅、不移焦。
+# 开关改动必须**重启 harness 并刷新页面**——dist/client.js 由宿主进程启动时读盘下发，
+# 浏览器要重新拉取。本包的客户端行由 package.json 的 `dsh.client` 自动进入 roster，
+# **无需**改 profile 的挂载行。设计、上游耦合面与已知限制见 notes/keyboard.md。
 # ============================================================================
 
 - insert:
