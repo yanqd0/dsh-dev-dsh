@@ -2380,6 +2380,21 @@ const facts: Fact[] = [
     line: 598,
     note: 'AgentRegistry.roots() = registry 中 owner 为 undefined 的 agent；子级因带 owner 而不是根',
   },
+  // plan #28：同一页的「咨询循环」节（子级提问 → 父级问用户 → 父级回投）引用的上游事实。
+  {
+    id: 'subagent-settlement-message',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/subagent/subagent/src/continuation-messages.ts',
+    line: 135,
+    note: '结算通知就是一条 user/message：summary + 「Its closing message:」+ 子级最终非空文本块（没有则 It left no closing message.），source.kind = subagent-settled',
+  },
+  {
+    id: 'subagent-not-resumable',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/subagent/subagent/src/control.ts',
+    line: 74,
+    note: '浏览器 prompt 通道对不可冷恢复的目标（一次性 / 未知子级）以 subagent/not-resumable 拒绝',
+  },
 ];
 
 /** A fact that cannot be re-verified because its reference tree is missing. */
