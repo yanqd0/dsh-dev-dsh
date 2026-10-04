@@ -2395,6 +2395,55 @@ const facts: Fact[] = [
     line: 74,
     note: '浏览器 prompt 通道对不可冷恢复的目标（一次性 / 未知子级）以 subagent/not-resumable 拒绝',
   },
+  // plan #29：新页 host-to-client-channel 与 e2e-verification-recipe 引用的上游事实。
+  {
+    id: 'webserver-index-inject-event',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/host/webserver/src/index.ts',
+    line: 34,
+    note: 'webserver/index-inject 事件声明：每次 index 渲染 / worker boot 载荷请求各 emit 一次，订阅者把当前行 push 进可变表',
+  },
+  {
+    id: 'client-page-injection-interpreter',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/web/src/apply-injections.ts',
+    note: '页面侧解释器：global / script / script-src / style / html 行按表顺序执行，global 行在脚本之前生效',
+  },
+  {
+    id: 'client-shortcuts-host-injection',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/shortcuts/src/index.ts',
+    line: 16,
+    note: '官方先例：宿主半边直接 ctx.on(webserver/index-inject) 推 global 行 __DSH_SHORTCUTS_CONFIG__，不查 webserver 服务',
+  },
+  {
+    id: 'client-settings-models-host-injection',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/ui-settings-models/src/index.ts',
+    line: 14,
+    note: '第二个官方先例：宿主 apply 里直接 ctx.on(webserver/index-inject) 推 __DSH_MODELS_ONBOARDING__',
+  },
+  {
+    id: 'client-theme-prepend-injection',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/ui-theme/src/index.ts',
+    line: 43,
+    note: '注入行顺序即执行顺序：官方用 { prepend: true } 把行塞到表首，保证全局/样式先于读它的脚本',
+  },
+  {
+    id: 'shortcuts-fixed-input-observer',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/shortcuts/src/client/types.ts',
+    line: 101,
+    note: 'observeFixedInput：观察按固定序列本地仲裁后的输入，是「提示卡上补键盘行为」唯一受支持的接入点',
+  },
+  {
+    id: 'shortcuts-dom-install',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/client/shortcuts/src/client/dom.ts',
+    line: 31,
+    note: 'installKeyboard：window 级 bubble 监听，先喂本地固定观察者再走命令 dispatch；事件来自 realm 全局 window 而非服务',
+  },
 ];
 
 /** A fact that cannot be re-verified because its reference tree is missing. */

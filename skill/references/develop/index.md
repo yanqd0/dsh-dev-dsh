@@ -36,9 +36,13 @@ dsh 的一切都是插件，但**不同分类的插件是完全不同的活**：
 | ---------------------------------------------------- | ----------------------------------------------- |
 | 包形态与挂载声明：patch 语义、层序、`files` 清单字段 | `references/develop/mounting-and-manifest.md`   |
 | 宿主入口与 DI：导出形态、Config 校验、工具注册、事件 | `references/develop/host-entry-and-di.md`       |
+| host → browser 通道：配置/偏好/数据怎么到客户端半边  | `references/develop/host-to-client-channel.md`  |
 | 构建、发布与踩坑：仓外仓库的工程面                   | `references/develop/build-and-pitfalls.md`      |
 | 子进程执行与信任模型：跑外部 CLI 的边界与谁施加沙箱  | `references/develop/subprocess-and-trust.md`    |
 | 审批与提权：给危险操作加一道人门                     | `references/develop/approval-and-escalation.md` |
+
+> **带浏览器半边的插件**（web UI 类）：`config` **不会**被交给客户端 entry，必须由宿主半边注入页面全局。
+> 动客户端代码之前先读 `references/develop/host-to-client-channel.md`——它写着四条通道、四个陷阱与三条机械判据。
 
 > **包装外部 CLI 的工具**（uv / pnpm / cargo / git…）是 tool 类最常见的形态：除本类流程页外，
 > 先读 `references/develop/tool-plugins.md` 与上表的「子进程执行与信任模型」「审批与提权」两页——

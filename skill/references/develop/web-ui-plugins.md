@@ -94,6 +94,9 @@ export function apply(ctx: Context) {
 
 ## 6. 静态插件怎么从宿主取数（host↔client 通道）
 
+> **本节只讲「浏览器 → 宿主」取数。反向的「宿主 → 浏览器」传值（含本插件的 `config`）是另一条通道，
+> 且客户端 entry **拿不到挂载行 `config`**——先读 `references/develop/host-to-client-channel.md`。**
+
 **结论**：已安装（静态）插件的 browser 半边取数走**宿主 `ctx.webServer` 路由 + 浏览器 `fetch`**。
 
 这条是排除法得到的，别再从别处找：
