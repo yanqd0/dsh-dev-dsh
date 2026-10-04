@@ -2340,6 +2340,46 @@ const facts: Fact[] = [
     path: 'packages/jobs/tool-jobs/README.zh.md',
     note: '等待与通知语义：wait 默认 30s / 上限 600s、超时保持 running、完成通知文案与 busy/idle 投递、awaited 不重复通知、completionDelivery 与 maxConsecutiveWakes',
   },
+  // plan #27：同一页的「在 plan mode 里委派」节（子级不能发起人机交互）引用的上游事实。
+  {
+    id: 'user-questions-root-only',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/interaction/user-questions/src/index.ts',
+    line: 140,
+    note: 'assertLiveRoot：只有运行时根 agent 能发起人机交互；存活子级以 DELEGATED_CALLER 被拒，文案指引把未决问题写进子级最终结果',
+  },
+  {
+    id: 'user-questions-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/interaction/user-questions/README.zh.md',
+    note: 'ask / askTimed 契约、plan-review intent、存活子级不能发起人机交互、答案 Remote 的根 agent 要求',
+  },
+  {
+    id: 'plan-mode-exit-tool',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/plan/plan-mode/src/index.ts',
+    line: 297,
+    note: 'exit_plan_mode 要求调用者自己的 session 处于 plan mode，随后经 ctx.userQuestions 走 plan-review 人机交互评审',
+  },
+  {
+    id: 'plan-mode-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/plan/plan-mode/README.zh.md',
+    note: 'plan mode 是提示词层软约束（每个工具仍可用，强制靠沙箱/审批）、/plan 命令、评审退出与投影状态',
+  },
+  {
+    id: 'plan-subsystem-doc',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'docs/subsystems/plan.zh.md',
+    note: 'plan/mode 是仅记日志的整值替换事件：恢复、fork 与 compaction 都从日志折叠出状态',
+  },
+  {
+    id: 'agent-registry-roots',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/core/agent/src/index.ts',
+    line: 598,
+    note: 'AgentRegistry.roots() = registry 中 owner 为 undefined 的 agent；子级因带 owner 而不是根',
+  },
 ];
 
 /** A fact that cannot be re-verified because its reference tree is missing. */

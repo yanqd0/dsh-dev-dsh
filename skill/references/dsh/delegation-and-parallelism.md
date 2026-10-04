@@ -17,6 +17,8 @@
 - **context 语义按入口分**：`subagent`（`spawn` provider）从空会话开始；`subagent_fork`（`fork` provider）
   以父级**已完成的轮次前缀**作为会话种子。
 - **等它们时不要 `sleep`**：默认继续做独立步骤等完成通知，真被阻塞才用 `job_output(wait: true)`（见 §5）。
+- **plan 模式里子级能调研 / 起草，不能替你问用户、也不能替你交计划**——提问与 `exit_plan_mode` 都只允许
+  运行时根 agent 发起（见 §9）。
 
 ## 2. 通道清单与默认装配
 
@@ -48,7 +50,7 @@
 - 并行调用进一个滚动池，上限是 loop 配置 `maxParallelToolCalls`（默认 10）；**提交仍按模型顺序**，
   所以先跑完的快速子级会被前面的慢兄弟挡住（GUI 上各子级的进度仍独立可见）。
 - 协调共享工作区与外部资源是**模型的责任**；并发子级也会争抢同一份 LLM 配额。
-  这条取舍的来由见 §9 的归档记录。
+  这条取舍的来由见 §10 的归档记录。
 
 ### 3.2 workflow 层：脚本内部的组合器
 
@@ -150,7 +152,37 @@ Auto / Full 会追加捕获的 `permission/preset` 身份，且每个子级调�
   要等就用 `job_output(wait: true)`，否则继续干活等通知（见 §5）。
 - 兄弟子级可能在工作区上互相踩，宿主不做串行化保护。
 
-## 9. 源码最后手段（默认不读）
+## 9. 在 plan mode 里委派：子级能干活，不能替用户决策
+
+plan 模式要求 agent 先探索、再呈交一份经用户评审的计划（**每个工具仍然可用**，plan mode 是提示词层的软约束，
+真正的强制在沙箱与审批）。把调研 / 评估 / 起草交给 subagent 是可行的，但**两件事必须留在发起委派的那个
+顶层 agent 手里**：
+
+| 想做的事                                        | 子级能不能                         | 为什么                                                              |
+| ----------------------------------------------- | ---------------------------------- | ------------------------------------------------------------------- |
+| 只读调研、代码考古、方案评估、起草计划 markdown | **能**，把结论作为最终文本返回即可 | 子级在自己的 session 里挂 preset 的同一套工具                       |
+| 把「需要用户拍板的问题」直接弹给用户            | **不能**                           | `ctx.userQuestions` 的人机交互只接受**运行时根** agent              |
+| 呈交计划让用户批准（`exit_plan_mode`）          | **不能**                           | 评审本身就是一次人机交互，且要求调用者自己的 session 处于 plan mode |
+
+- 子级调用 `ask_user_question` / `askTimed`（或底层 `ctx.userQuestions.ask`）会以 `DELEGATED_CALLER` 失败，
+  文案就是宿主给出的做法指引：`human interaction is unavailable while the calling agent is owned by
+another live agent; include the unresolved question or decision in the child agent's final result`。
+  **正确姿势**：子级在最终结果里给「待决策清单」——问题、候选选项、它的建议与影响；由父级（根 agent）
+  用 `ask_user_question` 去问。子级不是根，是因为它由父级创建并持有
+  （`AgentRegistry.roots()` = registry 里没有 owner 的 agent；`CreateAgentOptions.owner` 就是那个 owner）。
+- `exit_plan_mode` 有两道门槛：先要求**调用者自己的 session 处于 plan mode**（否则
+  `exit_plan_mode is only available in plan mode`），再走一次人机交互评审（`intent: 'plan-review'`，
+  选项 `Approve` / `Keep planning`）。所以计划只能由顶层 agent 呈交。
+- **plan mode 状态随 fork 继承，不随 spawn 继承**：`plan/mode` 是仅记日志、整值替换的会话事件，
+  恢复 / fork / compaction 都从日志折叠；`fork` 子级拿到的是父级已完成轮次前缀，因此自己也处于 plan mode；
+  `spawn` 子级是空会话，默认**不在** plan mode。
+- 由此产生一个易踩的坑：**父级在 plan mode ≠ 子级受约束**。派 `spawn` 子级去「评估」时，它的提示词里
+  没有 plan-mode 的「不要改文件」，它**可以**写文件（只受沙箱与审批约束）。派活时要显式写只读要求，
+  必要时用 `toolFilter` 把写工具从子级作用域里摘掉（要求 provider 支持 `toolFilter`）。
+- 别把「用户口头同意」当批准：plan-mode 的提示词写明对话里的同意不结束 plan mode，只有 `exit_plan_mode`
+  的评审通过才算；子级带回的用户答复同样要折进计划再呈交。
+
+## 10. 源码最后手段（默认不读）
 
 - `packages/subagent/tool-subagent/src/index.ts`：工具注册、后台策略取值、提示词节与并发安全声明。
 - `packages/core/agent-loop/src/tool-calls.ts` 与 `packages/core/agent-loop/src/constants.ts`：滚动池调度与默认上限。
