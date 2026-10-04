@@ -2326,6 +2326,20 @@ const facts: Fact[] = [
     path: '.agents/notes/archived/feature/2026-08-09-parallel-subagent-delegations.md',
     note: '兄弟委派为何被声明为并发安全、容量归属（池位 vs 在线子级）与工作区竞争责任的归档记录，只作背景',
   },
+  // plan #26：同一页的「等待与收尾」节（禁 sleep 轮询）引用的上游事实。
+  {
+    id: 'tool-jobs-guidance-section',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/jobs/tool-jobs/src/index.ts',
+    line: 253,
+    note: 'job_* 的系统提示词原文：do not busy-poll or sleep on one；收尾用 job_output（只在真被阻塞时 wait: true）与 job_kill',
+  },
+  {
+    id: 'tool-jobs-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/jobs/tool-jobs/README.zh.md',
+    note: '等待与通知语义：wait 默认 30s / 上限 600s、超时保持 running、完成通知文案与 busy/idle 投递、awaited 不重复通知、completionDelivery 与 maxConsecutiveWakes',
+  },
 ];
 
 /** A fact that cannot be re-verified because its reference tree is missing. */

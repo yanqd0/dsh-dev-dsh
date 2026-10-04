@@ -120,7 +120,8 @@
 | #21  | dogfooding 本地生效：`--link` 安装模式与 `--verify`（#75）                                    | done                                                       |
 | #22  | 试验性子模块 #1：宿主 `uv` 工具（`src/uv/`，默认关闭、profile 显式开启）                      | done                                                       |
 | #23  | develop 侧补执行与信任面：子进程与信任模型、审批与提权两页，通用页补强与活样例登记（#82–#84） | done                                                       |
-| #25  | dsh 本体：委派与并行分册（`subagent` / `workflow` / loop 调度机制页 + 索引与台账）            | 本 plan                                                    |
+| #25  | dsh 本体：委派与并行分册（`subagent` / `workflow` / loop 调度机制页 + 索引与台账）            | done                                                       |
+| #26  | 委派页补「等待与收尾」节：禁 `sleep` 轮询，改用完成通知或 `job_output(wait: true)`（#90）     | 本 plan                                                    |
 
 plan 号以 `mint plan list` 为准，上表只固定职责边界。
 

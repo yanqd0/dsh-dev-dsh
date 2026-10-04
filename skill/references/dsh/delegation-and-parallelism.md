@@ -16,6 +16,7 @@
 - 真正自动的只有四件事：系统提示词引导、continuable 默认后台、子级结算通知、Activation 的寿命管理。
 - **context 语义按入口分**：`subagent`（`spawn` provider）从空会话开始；`subagent_fork`（`fork` provider）
   以父级**已完成的轮次前缀**作为会话种子。
+- **等它们时不要 `sleep`**：默认继续做独立步骤等完成通知，真被阻塞才用 `job_output(wait: true)`（见 §5）。
 
 ## 2. 通道清单与默认装配
 
@@ -47,7 +48,7 @@
 - 并行调用进一个滚动池，上限是 loop 配置 `maxParallelToolCalls`（默认 10）；**提交仍按模型顺序**，
   所以先跑完的快速子级会被前面的慢兄弟挡住（GUI 上各子级的进度仍独立可见）。
 - 协调共享工作区与外部资源是**模型的责任**；并发子级也会争抢同一份 LLM 配额。
-  这条取舍的来由见 §8 的归档记录。
+  这条取舍的来由见 §9 的归档记录。
 
 ### 3.2 workflow 层：脚本内部的组合器
 
@@ -83,7 +84,29 @@
 - 人类侧：客户端（浏览器）可以打开子会话看 transcript、对在线的 continuable 子级投递 Queue / Steer 消息、
   中断它。**不能从 GUI 强制新建委派**——那始终是模型的决定。
 
-## 5. context：从零还是分叉
+## 5. 等待与收尾：不要 `sleep` 轮询
+
+**结论：等后台工作或子级时不要在 bash 里 `sleep`。** 上游把这条写进了 `job_*` 工具的系统提示词：
+`do not busy-poll or sleep on one; keep working on independent steps`。代价不只是浪费墙钟——完成通知要等
+当前 step 结束后的**下一个 step** 才会被模型看到，而 `sleep` 正好把这一步占满，等于自己把通知**推迟**；
+时间又猜不准（快任务白等、慢任务还得再来一轮），于是「等」就退化成了轮询。
+
+| 情况                 | 该做什么                                                                                                                                 |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| 默认姿势             | **不等**：继续做相互独立的步骤，完成通知会自动到达                                                                                       |
+| 确实被结果阻塞       | `job_output(<id>, wait: true)`：默认等 30 s，`timeout_ms` 可加长但向 600 s 收敛；超时返回 `[status: running]` 且任务仍存活，可以再等一次 |
+| 一两步就结束的短工作 | 前台跑：bash 不加 `run_in_background`；`subagent` 用 `run_in_background: false`（`one-shot` 策略本来就在前台等待）                       |
+| 不再需要的任务       | `job_kill`（id 用 `job_list` 找）；最终答复前用 `job_output` 收齐仍相关的任务                                                            |
+
+- 完成通知的形态：`background job <id> (<kind>: <label>) finished [status: ...]. Read its output with job_output.`
+  繁忙的 agent 在下一步拿到它，空闲的 agent 被一个 follow-up 轮次唤醒（`completionDelivery: quiet` 时改为待领注入）。
+  后台 bash、PTY 发送与一次性后台 `subagent` 共用这一套，所以收尾方式是同一套。
+- **`wait` 与通知是两条路，选一条**：运行时把已经用存活 `wait` 收走的结算记为 `awaited`，不再补发通知；
+  靠通知回来的结果也不必再 `wait`。
+- continuable 子级不走这套 job：结算通知由委派 seam 自己投递（见 §4），追投用 `send_message`——
+  所以也别拿 `list_agents` 轮询「做完没有」。
+
+## 6. context：从零还是分叉
 
 |              | `spawn`（`subagent`）                                                                                | `fork`（`subagent_fork`）                                                    |
 | ------------ | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
@@ -98,7 +121,7 @@
 Auto / Full 会追加捕获的 `permission/preset` 身份，且每个子级调用都独立过一次 review；Read Only / Workspace Write
 保留沙箱 override 加 `approval: never`。所以「父子共享一个授权通道」是错的模型。
 
-## 6. 改行为从哪下手
+## 7. 改行为从哪下手
 
 | 想改什么                         | 位置                                                                               |
 | -------------------------------- | ---------------------------------------------------------------------------------- |
@@ -111,7 +134,7 @@ Auto / Full 会追加捕获的 `permission/preset` 身份，且每个子级调�
 | 一条消息里并发多少前台调用       | loop 的 `maxParallelToolCalls`（默认 10）                                          |
 | workflow 的并发与总量            | `dsh-workflow-ptc` 的 `maxConcurrentAgents` / `maxTotalAgents` / `maxItemsPerCall` |
 
-## 7. 易错点
+## 8. 易错点
 
 - **fork 看不见进行中的回合**：不能假设子级知道你「刚说的那句话」；提示词仍要自足。
 - 子级既看不到父级对话（`spawn`），也看不到父级的工具、服务与授权；「继承 workspace 与模型路由」不等于继承能力。
@@ -123,9 +146,11 @@ Auto / Full 会追加捕获的 `permission/preset` 身份，且每个子级调�
 - provider 不具备的能力（`outputSchema` / `persona` / `toolFilter` / 数值深度）在 start 之前就被拒绝
   （`UNSUPPORTED_CAPABILITY`），不会「接受了再忽略」。
 - `list_agents` 的 `running` / `inactive` **不表示任务是否完成**；完成以结算通知（或 job 状态）为准。
+- **不要 `sleep` 等**：那是 busy-poll，既把完成通知推迟到 `sleep` 结束之后，时间也猜不准；
+  要等就用 `job_output(wait: true)`，否则继续干活等通知（见 §5）。
 - 兄弟子级可能在工作区上互相踩，宿主不做串行化保护。
 
-## 8. 源码最后手段（默认不读）
+## 9. 源码最后手段（默认不读）
 
 - `packages/subagent/tool-subagent/src/index.ts`：工具注册、后台策略取值、提示词节与并发安全声明。
 - `packages/core/agent-loop/src/tool-calls.ts` 与 `packages/core/agent-loop/src/constants.ts`：滚动池调度与默认上限。
