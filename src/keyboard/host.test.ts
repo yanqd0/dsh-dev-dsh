@@ -1,77 +1,100 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { KEYBOARD_CONFIG_GLOBAL, KEYBOARD_DISABLED_NOTE, installKeyboard } from './host.ts';
+import {
+  INDEX_INJECT_EVENT,
+  KEYBOARD_CONFIG_GLOBAL,
+  KEYBOARD_DISABLED_NOTE,
+  KEYBOARD_NO_EVENT_BUS_NOTE,
+  installKeyboard,
+} from './host.ts';
 import type { IndexInjectionRow } from './host.ts';
 import type { DshContextLike } from '../uv/types.ts';
 
-/** A host context whose `get` returns the named optional services. */
-function hostContext(services: Record<string, unknown> = {}): DshContextLike {
-  return {
-    get: (name) => services[name],
-    inject: () => undefined,
-  };
-}
-
-/** A stand-in web server recording `webserver/index-inject` subscribers. */
-function webServer(): {
-  service: { on: (event: string, listener: (table: IndexInjectionRow[]) => void) => void };
-  emit: () => IndexInjectionRow[];
+/** A host context that records the events this submodule subscribes to. */
+function hostContext(options: { withBus?: boolean } = {}): {
+  ctx: DshContextLike;
+  emit: (event: string) => IndexInjectionRow[];
+  subscribed: string[];
 } {
-  const listeners: ((table: IndexInjectionRow[]) => void)[] = [];
+  const listeners = new Map<string, ((table: IndexInjectionRow[]) => void)[]>();
+  const subscribed: string[] = [];
+  const ctx = {
+    get: () => undefined,
+    inject: () => undefined,
+    ...(options.withBus === false
+      ? {}
+      : {
+          on: (event: string, listener: (table: IndexInjectionRow[]) => void) => {
+            subscribed.push(event);
+            const current = listeners.get(event);
+            if (current === undefined) listeners.set(event, [listener]);
+            else current.push(listener);
+            return undefined;
+          },
+        }),
+  } as DshContextLike;
   return {
-    service: {
-      on: (event, listener) => {
-        expect(event).toBe('webserver/index-inject');
-        listeners.push(listener);
-      },
-    },
-    emit: () => {
+    ctx,
+    subscribed,
+    emit: (event) => {
       const table: IndexInjectionRow[] = [];
-      for (const listener of listeners) listener(table);
+      for (const listener of listeners.get(event) ?? []) listener(table);
       return table;
     },
   };
 }
 
+/** A context whose `on` throws, standing in for a broken subscription. */
+function throwingContext(): DshContextLike {
+  return {
+    get: () => undefined,
+    inject: () => undefined,
+    on: () => {
+      throw new Error('subscribe refused');
+    },
+  } as unknown as DshContextLike;
+}
+
 describe('keyboard submodule host wiring', () => {
   it('wires nothing and reports the disabled state', () => {
     const log = vi.fn();
-    expect(installKeyboard(hostContext(), { enabled: false }, log)).toEqual({
+    const fake = hostContext();
+    expect(installKeyboard(fake.ctx, { enabled: false }, log)).toEqual({
       ok: true,
       reason: 'disabled',
     });
     expect(log).toHaveBeenCalledWith(KEYBOARD_DISABLED_NOTE);
+    expect(fake.subscribed).toEqual([]);
   });
 
-  it('publishes the switch as a page global when the profile enables it', () => {
+  it('publishes the switch on every index render when the profile enables it', () => {
     const log = vi.fn();
-    const server = webServer();
-    const outcome = installKeyboard(
-      hostContext({ webserver: server.service }),
-      { enabled: true },
-      log
-    );
-    expect(outcome).toEqual({ ok: true });
+    const fake = hostContext();
+    expect(installKeyboard(fake.ctx, { enabled: true }, log)).toEqual({ ok: true });
     expect(log).not.toHaveBeenCalled();
-    expect(server.emit()).toEqual([
+    expect(fake.subscribed).toEqual([INDEX_INJECT_EVENT]);
+    expect(fake.emit(INDEX_INJECT_EVENT)).toEqual([
       { kind: 'global', name: KEYBOARD_CONFIG_GLOBAL, value: { enabled: true } },
     ]);
   });
 
-  it('reports a composition with no web server without failing the load', () => {
-    expect(installKeyboard(hostContext(), { enabled: true })).toEqual({
-      ok: false,
-      reason: 'no webserver in this composition',
-    });
+  it('subscribes without needing any service in the composition', () => {
+    // The subscription is an event listener: no `inject`, no service lookup, so a
+    // headless host that never serves a page simply never emits it.
+    const fake = hostContext();
+    expect(installKeyboard(fake.ctx, { enabled: true })).toEqual({ ok: true });
+    expect(fake.emit('some/other-event')).toEqual([]);
+  });
+
+  it('reports a context without an event bus', () => {
+    const log = vi.fn();
+    const outcome = installKeyboard(hostContext({ withBus: false }).ctx, { enabled: true }, log);
+    expect(outcome).toEqual({ ok: false, reason: 'host context exposes no event bus' });
+    expect(log).toHaveBeenCalledWith(KEYBOARD_NO_EVENT_BUS_NOTE);
   });
 
   it('reports a failing subscription instead of throwing', () => {
-    const service = {
-      on: () => {
-        throw new Error('subscribe refused');
-      },
-    };
-    expect(installKeyboard(hostContext({ webserver: service }), { enabled: true })).toEqual({
+    expect(installKeyboard(throwingContext(), { enabled: true })).toEqual({
       ok: false,
       reason: 'subscribe refused',
     });

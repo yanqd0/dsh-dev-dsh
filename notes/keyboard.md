@@ -55,7 +55,10 @@ dsh Web GUI 里，授权卡、方案复核卡、用户问题卡都会**接管 co
   （`@deepseek-ai/dsh-client-shortcuts` 注入 `__DSH_SHORTCUTS_CONFIG__`）；
   `src/keyboard/host.ts` 照此注入 `__DSH_DEV_DSH_KEYBOARD__`，
   `src/client-entry.ts` 的 `keyboardEnabled` 优先读它、其次才读 Loader 传的 `cfg`。
-  没有 web server 的组合（headless/CLI）不注册、只返回 `{ ok: false, reason: 'no webserver…' }`，插件照常加载。
+  订阅方式是**直接 `ctx.on('webserver/index-inject', …)`**——官方那个能正常注入的宿主半边
+  （`dsh-client-ui-settings-models`）就是这么写的：cordis 的 `on` 不需要 inject，没有 web server 的组合
+  只是永远不会收到 emit，插件照常加载。**不要**先 `ctx.get('webserver')` 再注册：那一步会静默失败，
+  而失败若又落在「没有 logger 就不打日志」的兜底里，就变成**整条特性无声失效**（这次的真实教训）。
   开启方式：
 
   ```yaml

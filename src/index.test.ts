@@ -46,17 +46,14 @@ describe('dsh-dev-dsh plugin entry', () => {
     apply(
       {
         ...fake.ctx,
-        get: (name) =>
-          name === 'webserver'
-            ? {
-                on: (_event: string, listener: (table: typeof rows) => void) => {
-                  listeners.push(listener);
-                },
-              }
-            : undefined,
-      },
+        on: (_event: string, listener: (table: typeof rows) => void) => {
+          listeners.push(listener);
+          return undefined;
+        },
+      } as DshContextLike,
       Config.parse({ keyboard: { enabled: true } })
     );
+    expect(listeners).toHaveLength(1);
     for (const listener of listeners) listener(rows);
     expect(rows).toEqual([
       { kind: 'global', name: '__DSH_DEV_DSH_KEYBOARD__', value: { enabled: true } },
@@ -71,6 +68,27 @@ describe('dsh-dev-dsh plugin entry', () => {
   it('skips the sync when autoInstallSkill is false', () => {
     apply(host().ctx, Config.parse({ autoInstallSkill: false }));
     expect(installSkill).not.toHaveBeenCalled();
+  });
+
+  it('publishes the keyboard switch to served pages when the profile enables it', () => {
+    const rows: { kind: string; name: string; value: unknown }[] = [];
+    const listeners: ((table: typeof rows) => void)[] = [];
+    const fake = host();
+    apply(
+      {
+        ...fake.ctx,
+        on: (_event: string, listener: (table: typeof rows) => void) => {
+          listeners.push(listener);
+          return undefined;
+        },
+      } as DshContextLike,
+      Config.parse({ keyboard: { enabled: true } })
+    );
+    expect(listeners).toHaveLength(1);
+    for (const listener of listeners) listener(rows);
+    expect(rows).toEqual([
+      { kind: 'global', name: '__DSH_DEV_DSH_KEYBOARD__', value: { enabled: true } },
+    ]);
   });
 
   it('does not touch host services while the uv submodule is disabled', () => {

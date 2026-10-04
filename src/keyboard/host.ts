@@ -5,12 +5,13 @@
  * client module system loads whenever this package declares `dsh.client`. Two
  * facts shape this module:
  *
- * - **The browser cannot read the mount line.** A client entry receives only the
- *   config the Loader happens to hand it, so the host publishes the validated
- *   switch as a page global through `webserver/index-inject` — exactly how
- *   `@deepseek-ai/dsh-client-shortcuts` publishes `__DSH_SHORTCUTS_CONFIG__`.
- * - **A missing web server is not an error.** Headless and CLI profiles have no
- *   page to patch; the submodule then wires nothing and the plugin still loads.
+ * - **A client entry is not handed the mount line.** The shipped
+ *   `@deepseek-ai/dsh-client-shortcuts` publishes its validated settings as a page
+ *   global through `webserver/index-inject` for exactly that reason, and this
+ *   module does the same for `keyboard.enabled`.
+ * - **Registering the subscription costs nothing outside a web composition.**
+ *   `ctx.on` needs no injection, and an event with no listeners is a no-op, so the
+ *   plugin still loads in headless and CLI profiles.
  */
 
 import type { DshContextLike } from '../uv/types.js';
@@ -18,6 +19,9 @@ import type { KeyboardConfig } from './config.js';
 
 /** The page global the browser half reads its switch from. */
 export const KEYBOARD_CONFIG_GLOBAL = '__DSH_DEV_DSH_KEYBOARD__';
+
+/** The page-injection event a web server emits while rendering the index. */
+export const INDEX_INJECT_EVENT = 'webserver/index-inject';
 
 /** One page-injection row, as `webserver/index-inject` subscribers push it. */
 export interface IndexInjectionRow {
@@ -35,9 +39,9 @@ export interface KeyboardInstallOutcome {
 /** The injection table a web server hands to every subscriber. */
 type InjectionTable = IndexInjectionRow[];
 
-/** The optional web-server slice this submodule subscribes to. */
-interface IndexInjectorLike {
-  on(event: 'webserver/index-inject', listener: (table: InjectionTable) => void): unknown;
+/** The context slice this submodule needs on top of the shared host slice. */
+interface EventBusLike {
+  on(event: string, listener: (table: InjectionTable) => void): unknown;
 }
 
 /**
@@ -45,7 +49,7 @@ interface IndexInjectorLike {
  *
  * @param ctx - the plugin's root context.
  * @param config - the validated submodule config; a disabled submodule publishes nothing.
- * @param log - one-line sink used to report the disabled state to the host log.
+ * @param log - optional one-line sink; without one, a failure survives only in the outcome.
  * @returns the wiring outcome; it never throws.
  */
 export function installKeyboard(
@@ -58,29 +62,33 @@ export function installKeyboard(
     return { ok: true, reason: 'disabled' };
   }
   try {
-    const injector = asIndexInjector(ctx.get('webserver'));
-    if (injector === undefined) {
-      return { ok: false, reason: 'no webserver in this composition' };
+    const bus = asEventBus(ctx);
+    if (bus === undefined) {
+      log?.(KEYBOARD_NO_EVENT_BUS_NOTE);
+      return { ok: false, reason: 'host context exposes no event bus' };
     }
-    injector.on('webserver/index-inject', (table) => {
+    bus.on(INDEX_INJECT_EVENT, (table) => {
       table.push({ kind: 'global', name: KEYBOARD_CONFIG_GLOBAL, value: { enabled: true } });
     });
   } catch (error) {
-    // Wiring itself failed (not a service outage): report, never break load.
-    return { ok: false, reason: error instanceof Error ? error.message : String(error) };
+    const reason = error instanceof Error ? error.message : String(error);
+    log?.(`[keyboard] 注入页面开关失败：${reason}`);
+    return { ok: false, reason };
   }
   return { ok: true };
 }
 
-/** Narrow an optional service to the index-injection slice this submodule uses. */
-function asIndexInjector(value: unknown): IndexInjectorLike | undefined {
-  if (typeof value !== 'object' || value === null) return undefined;
-  return typeof (value as { on?: unknown }).on === 'function'
-    ? (value as IndexInjectorLike)
-    : undefined;
+/** Narrow a context to one that can register the page-injection listener. */
+function asEventBus(ctx: DshContextLike): EventBusLike | undefined {
+  const on = (ctx as { on?: unknown }).on;
+  return typeof on === 'function' ? (ctx as unknown as EventBusLike) : undefined;
 }
 
 /** Why the browser half does nothing today, and how to turn it on. */
 export const KEYBOARD_DISABLED_NOTE =
   '[keyboard] 提示卡 Enter/↑↓ 补位未开启（keyboard.enabled: false）；' +
   '如需开启，在 profile 的 cordis.patch.yml 中为本插件加 `keyboard: { enabled: true }` 并重启 harness。';
+
+/** The host context cannot publish a page global at all. */
+export const KEYBOARD_NO_EVENT_BUS_NOTE =
+  '[keyboard] 已开启，但当前宿主的 ctx 没有 `on`，无法把开关注入页面；浏览器半边会保持关闭。';
