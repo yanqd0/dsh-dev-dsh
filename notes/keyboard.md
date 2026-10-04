@@ -104,7 +104,24 @@ dsh Web GUI 里，授权卡、方案复核卡、用户问题卡都会**接管 co
   验证注册 id、`apply` / `inject` 导出，以及**从注入 global 打开**与关闭两条路径（`dist/` 不存在时自跳过）。
 - 命令：`pnpm test && pnpm check-types && pnpm lint && pnpm build && pnpm pack:check`。
 
-## 7. 剥离路径
+## 7. 人工验收（2026-10，本机 web profile）
+
+按「不碰鼠标」的口径逐卡验证，三张卡全部通过：
+
+| 卡          | 操作                                        | 结果                                                                            |
+| ----------- | ------------------------------------------- | ------------------------------------------------------------------------------- |
+| 提权/授权卡 | 弹出后不碰鼠标直接 `Enter`                  | 放行；会话日志 `approval/asked` → `approval/decided: allowed-once`（间隔约 2s） |
+| 用户问题卡  | 不碰鼠标 `↑` / `↓` 移动选中态、`Enter` 提交 | 通过（含自定义文本作答也正常）                                                  |
+| 方案复核卡  | 同上口径                                    | 通过                                                                            |
+
+同一次会话里，修复前的那张卡按 `Enter` 的记录是 `approval/decided: rejected` —— 与「键没有任何一方认领」一致。
+
+**前置条件（缺一不可）**：宿主重启 + 页面刷新。机械判据是「页面 HTML 里能搜到
+`globalThis["__DSH_DEV_DSH_KEYBOARD__"] = {"enabled":true}`」外加「下发的
+`plugins/??@yanqd0/dsh-dev-dsh/client.js` 与 `dist/client.js` 逐字节同源」——
+两者都成立而键盘仍无效时，才轮到怀疑 `observeFixedInput` 的投递面。
+
+## 8. 剥离路径
 
 浏览器半边只依赖 `ctx.shortcuts` 与 `document`，不 import 任何 `@deepseek-ai/*` 值；
 `src/keyboard/` + `src/client-entry.ts` + `scripts/build-client.mjs` 可整体搬进独立插件包，
