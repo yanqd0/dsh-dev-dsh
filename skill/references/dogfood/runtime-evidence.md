@@ -139,7 +139,7 @@ dsh --profile dogfood --dump-config-schema    # JSON Schema（会 import 插件�
 
 `cordis_inspect_list` / `cordis_inspect_query` 是**只读**探针：不执行业务方法、不改运行时。它的价值全在
 「按需要什么就问什么」，因为**全量查询很贵**——一次无参全量能把整棵 slot 树或整份 Service 契约目录倒出来，
-实测一次约 10–50 KB 量级（某次 dsh-mint 会话复盘里，10 次 `cordis_inspect_query` 合计 12.5 万字符，
+实测一次约 10–50 KB 量级（某次真实会话复盘里，10 次 `cordis_inspect_query` 合计 12.5 万字符，
 单次均值约 12.5 KB，占该会话工具结果总量的 17%）。
 
 **可用性**：provider 面由装载的插件决定。cordis preset（agent 预设 `cordis`）暴露这些工具；换预设就没有。
