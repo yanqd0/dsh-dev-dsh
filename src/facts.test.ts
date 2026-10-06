@@ -2444,6 +2444,74 @@ const facts: Fact[] = [
     line: 31,
     note: 'installKeyboard：window 级 bubble 监听，先喂本地固定观察者再走命令 dispatch；事件来自 realm 全局 window 而非服务',
   },
+  // plan #89：references/develop/subagent-provider.md 与 modules/subagent.md、modules/workflow.md 引用的上游事实。
+  {
+    id: 'subagent-group-root',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/subagent',
+    note: '模块页与索引把该组当作一个整体引用（组根路径本身没有契约，职责表以 packages/subagent/README.zh.md 为准）',
+  },
+  {
+    id: 'workflow-group-root',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/workflow',
+    note: '模块页与索引把该组当作一个整体引用（组根路径本身没有契约，职责表以 packages/workflow/README.zh.md 为准）',
+  },
+  {
+    id: 'subagent-package-group-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/subagent/README.zh.md',
+    note: 'subagent 组一张表：服务 + 六个 provider + 两个工具包的职责与 ctx 键，是模块页「包 / 对外提供」表的来源',
+  },
+  {
+    id: 'subagent-provider-contract-types',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/subagent/subagent/src/types.ts',
+    line: 130,
+    note: 'SubagentCapabilities 五旗标与 SubagentStartRequest 字段一一对应；SubagentProvider 的 name/capabilities/inheritsParentContext/agentRouteDefaults/start 与 prepareContinuable（方法存在即能力、seed 契约）的原始出处',
+  },
+  {
+    id: 'subagent-service-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/subagent/subagent/README.zh.md',
+    note: '服务契约全文：provider 注册表与两种子级形态、发布即所有权边界、注册受 effect 作用域约束（移除只阻断新启动）、maxActiveSubagents 容量与 ACTIVATION_LIMIT_REACHED',
+  },
+  {
+    id: 'subagent-spawn-provider-minimal',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/subagent/subagent-spawn-in-process/src/index.ts',
+    note: '最小 provider 范式：五旗标全 true、inheritsParentContext = false、空 seed 的 prepareContinuable、apply 里 ctx.subagents.registerProvider',
+  },
+  {
+    id: 'workflow-package-group-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/workflow/README.zh.md',
+    note: 'workflow 组一张表：workflow（Definition）/ workflow-ptc（引擎）/ tool-workflow / tool-ralph 的职责与 ctx 键',
+  },
+  {
+    id: 'workflow-engine-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/workflow/workflow/README.zh.md',
+    note: 'engine 契约：一个上下文同时只有一个引擎、run 归持有者且 result 永不 reject、workflow/* 事件只供观察',
+  },
+  {
+    id: 'workflow-ptc-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/workflow/workflow-ptc/README.zh.md',
+    note: 'PTC 引擎：Config 字段、Python PTC 组合必须禁用本引擎与 tool-workflow/tool-ralph、取消会中止受管进程与子 agent',
+  },
+  {
+    id: 'tool-workflow-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/workflow/tool-workflow/README.zh.md',
+    note: 'workflow 工具面：meta/script/args 三参、前台包络与结果渲染、toolName/maxResultChars 配置、父级轮次阻塞到运行结算',
+  },
+  {
+    id: 'tool-ralph-readme',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/workflow/tool-ralph/README.zh.md',
+    note: 'ralph 工具：固定前台的全新 agent 序列、Round 报告校验与上限、要求 provider 支持结构化输出且 inheritsParentContext: false',
+  },
 ];
 
 /** A fact that cannot be re-verified because its reference tree is missing. */

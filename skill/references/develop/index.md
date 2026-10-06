@@ -40,6 +40,7 @@ dsh 的一切都是插件，但**不同分类的插件是完全不同的活**：
 | 构建、发布与踩坑：仓外仓库的工程面                   | `references/develop/build-and-pitfalls.md`      |
 | 子进程执行与信任模型：跑外部 CLI 的边界与谁施加沙箱  | `references/develop/subprocess-and-trust.md`    |
 | 审批与提权：给危险操作加一道人门                     | `references/develop/approval-and-escalation.md` |
+| 写一个委派后端（subagent provider 与委派工具）       | `references/develop/subagent-provider.md`       |
 
 > **带浏览器半边的插件**（web UI 类）：`config` **不会**被交给客户端 entry，必须由宿主半边注入页面全局。
 > 动客户端代码之前先读 `references/develop/host-to-client-channel.md`——它写着四条通道、四个陷阱与三条机械判据。

@@ -136,6 +136,9 @@ Auto / Full 会追加捕获的 `permission/preset` 身份，且每个子级调�
 | 一条消息里并发多少前台调用       | loop 的 `maxParallelToolCalls`（默认 10）                                          |
 | workflow 的并发与总量            | `dsh-workflow-ptc` 的 `maxConcurrentAgents` / `maxTotalAgents` / `maxItemsPerCall` |
 
+要自己**写一个**后端（provider 契约、能力旗标、`prepareContinuable` 与工具侧配置）而不是改既有行，
+参见 `references/develop/subagent-provider.md`；本页只给机制与判据。
+
 ## 8. 易错点
 
 - **fork 看不见进行中的回合**：不能假设子级知道你「刚说的那句话」；提示词仍要自足。

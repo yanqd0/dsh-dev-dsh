@@ -23,7 +23,7 @@
 11. `references/dsh/persistence-and-format.md`：持久化、崩溃恢复与格式版本（seam / 句柄、flush 屏障、迁移链）。
 12. `references/dsh/concept-model.md`：概念模型（DDD 映射 + 中英对照 + 关系图）。
 13. `references/dsh/domain-vocabulary.md`：官方术语索引（权威在哪、按域分组、相互关系）。
-14. `references/dsh/modules/index.md`：模块 / 子系统索引（逐组外部契约；A/B 批已就位，其余批次见覆盖表）。
+14. `references/dsh/modules/index.md`：模块 / 子系统索引（逐组外部契约；A/B 批与 D 首批 subagent / workflow 已就位，其余批次见覆盖表）。
 15. `references/dsh/plugins/index.md`：内置 plugin 位置与冲突语义（哪些位置已经被占）。
 16. `references/dsh/versions/index.md`：版本窗口与反 CHANGELOG（历史插件为什么坏、升级要改什么）。
 

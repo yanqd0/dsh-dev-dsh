@@ -32,25 +32,29 @@
 - `references/dsh/modules/host.md`：`packages/host` 的 HTTP 路由、目录选择 seam 与插件清单。
 - `references/dsh/modules/api.md`：`packages/api` 的 Remote 声明、命名空间与转发白名单。
 - `references/dsh/modules/client.md`：`packages/client` 浏览器半边（+ `packages/typert` 类型面）。
+- `references/dsh/modules/subagent.md`：`packages/subagent` 的委派 seam、六个 provider 与两个工具包。
+- `references/dsh/modules/workflow.md`：`packages/workflow` 的编排脚本 seam、PTC 引擎与两个工具包。
 
 ## 覆盖表（逐批推进）
 
-状态含义：**已就位**＝本册有页可按；**A/B 批**＝本 plan 交付并按页登记；**C–E 批**＝已排期、尚无页（不要按图索骥）。
+状态含义：**已就位**＝本册有页可按（A/B 批 + D 首批 `subagent` / `workflow`）；**C–E 批**＝已排期、尚无页（不要按图索骥）。
 
-| 上游 group                                                                                                                                                                                                     | 页                                                | 状态        |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------- |
-| `core`                                                                                                                                                                                                         | `references/dsh/modules/kernel.md`                | 已就位（A） |
-| `llm`                                                                                                                                                                                                          | `references/dsh/modules/model.md`                 | 已就位（A） |
-| `session`                                                                                                                                                                                                      | `references/dsh/modules/sessions.md`              | 已就位（A） |
-| `session-query` + `storage`                                                                                                                                                                                    | `references/dsh/modules/session-query-storage.md` | 已就位（A） |
-| `boot` + `bundle` + `apps`                                                                                                                                                                                     | `references/dsh/modules/boot-bundle.md`           | 已就位（B） |
-| `host`                                                                                                                                                                                                         | `references/dsh/modules/host.md`                  | 已就位（B） |
-| `api`                                                                                                                                                                                                          | `references/dsh/modules/api.md`                   | 已就位（B） |
-| `client`（+ `typert`）                                                                                                                                                                                         | `references/dsh/modules/client.md`                | 已就位（B） |
-| `fs` `shell` `sandbox` `subprocess` `ssh` `terminal` `ptc-runtime` `mcp` `skill` `attachment` `spill` `lsp` `document` `web`                                                                                   | C 批                                              | 待建        |
-| `todo` `plan` `goal` `schedule` `subagent` `jobs` `workflow` `preset` `compaction` `context` `interaction` `feedback` `hooks` `webhook` `guard` `identity` `settings` `credentials` `telemetry` `deliverables` | D 批                                              | 待建        |
-| `util` `brand` `runtime-diagnostics` `test-support`                                                                                                                                                            | E 批（按需）                                      | 待建        |
-| `experimental/*`                                                                                                                                                                                               | 按需（预稳定原型）                                | 待建        |
+| 上游 group                                                                                                                                                                               | 页                                                | 状态        |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------- |
+| `core`                                                                                                                                                                                   | `references/dsh/modules/kernel.md`                | 已就位（A） |
+| `llm`                                                                                                                                                                                    | `references/dsh/modules/model.md`                 | 已就位（A） |
+| `session`                                                                                                                                                                                | `references/dsh/modules/sessions.md`              | 已就位（A） |
+| `session-query` + `storage`                                                                                                                                                              | `references/dsh/modules/session-query-storage.md` | 已就位（A） |
+| `boot` + `bundle` + `apps`                                                                                                                                                               | `references/dsh/modules/boot-bundle.md`           | 已就位（B） |
+| `host`                                                                                                                                                                                   | `references/dsh/modules/host.md`                  | 已就位（B） |
+| `api`                                                                                                                                                                                    | `references/dsh/modules/api.md`                   | 已就位（B） |
+| `client`（+ `typert`）                                                                                                                                                                   | `references/dsh/modules/client.md`                | 已就位（B） |
+| `subagent`                                                                                                                                                                               | `references/dsh/modules/subagent.md`              | 已就位（D） |
+| `workflow`                                                                                                                                                                               | `references/dsh/modules/workflow.md`              | 已就位（D） |
+| `fs` `shell` `sandbox` `subprocess` `ssh` `terminal` `ptc-runtime` `mcp` `skill` `attachment` `spill` `lsp` `document` `web`                                                             | C 批                                              | 待建        |
+| `todo` `plan` `goal` `schedule` `jobs` `preset` `compaction` `context` `interaction` `feedback` `hooks` `webhook` `guard` `identity` `settings` `credentials` `telemetry` `deliverables` | D 批                                              | 待建        |
+| `util` `brand` `runtime-diagnostics` `test-support`                                                                                                                                      | E 批（按需）                                      | 待建        |
+| `experimental/*`                                                                                                                                                                         | 按需（预稳定原型）                                | 待建        |
 
 ## 与其它页的分工
 
@@ -58,7 +62,8 @@
 - 逐组外部契约：本册。
 - 跨组的委派与并行机制（`subagent` + `workflow` + loop 调度）：`references/dsh/delegation-and-parallelism.md`；
   子级与用户决策（plan mode 边界、咨询循环）：`references/dsh/delegation-and-user-decisions.md`
-  ——D 批的 `subagent` / `workflow` 模块页只补各组自己的对外契约，机制不在本册重写。
+  ——`subagent` / `workflow` 模块页只补各组自己的对外契约，机制不在本册重写；仓外怎么写一个委派后端见
+  `references/develop/subagent-provider.md`。
 - 能力位置是否被占、冲突语义：`references/dsh/plugins/index.md`。
 - 新行为该放哪（判据）：`references/dsh/extension-points.md` §1 与 §4。
 
