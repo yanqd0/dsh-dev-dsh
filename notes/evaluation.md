@@ -297,3 +297,24 @@ name+description 目录，模型用 `skill({name})` 取 body（`packages/skill/t
   静态插件 host↔client 通道、webServer 前缀尾斜杠）已全部回灌为 plan #20 的 #72/#73/#74，技能内可逐条查到。
 - **含义**：手册价值取决于「首次载入就选中入口」，后续改 L0 路由按此衡量（结构契约仍以 `notes/skill-design.md` 为准）。
 - **剩余面**：「发布源装包后的跨项目复测」归 issue #24，本 plan 不再单起验证轮次。
+
+### 8.10 进程内 SQLite「compound SELECT 少行」复核（2026-10-06，plan #32 / issue #97）
+
+**背景**：mint 侧登记（`notes/decisions.md` D52、issue #524）称 rusqlite 0.39 + bundled SQLite 3.51.3 下
+`SELECT 1 AS a UNION ALL SELECT 2` 经 `prepare`/`query` 只回最后一行，并据此在该仓禁用 compound SELECT。
+
+**复核方法与结果**（本地 `probe/sqlite-compound/`，gitignored scratch；rusqlite 0.39 `bundled`，实跑 `sqlite_version()` = 3.51.3）：
+
+- 8 条最小 SQL（UNION / UNION ALL / ORDER BY / `VALUES` / 多列 / CTE / 子查询包裹 / 三路 UNION ALL）
+  各用 5 种取法（`stmt.query` 逐行、`query_map` + `collect`、`prepare_cached` + `query_map` + `collect`、
+  `query_row`、迭代器 `.last()`）——除 `query_row` / `.last()` 本就只取一行外，**行数全部正确**。
+- mint 的**原始 SQL 形态**（`?2 IS NULL OR …` 谓词 + 两分支 + `ORDER BY`）与参数化双分支 UNION ALL 同样返回全部行。
+- 上游 SQLite 3.51.0 的 EXISTS-to-JOIN compound 回归（[论坛复现](https://www2.sqlite.org/forum/forumpost/b9f09bda9c4f572f?t=c&unf)同形）
+  在 bundled 3.51.3 上已修复，未复现；Node 22.19 的 `node:sqlite`（SQLite 3.50.4）同样正确。
+
+**结论与去向**：本机**不可复现**「compound SELECT 少行」；最可能的解释是原测量的取行口径
+（`query_row` / `.last()` 只取一行）或未记录的额外条件，而非引擎回归。
+
+- **不收录进 skill**：手册不写无法复现的引擎缺陷。
+- 通用口径仍成立：同一 SQL 先换驱动 / CLI 对照；取全部行必须显式 `collect`（`query_row` / `.last()` 只取一行）。
+- mint #524 / D52 的结论建议该仓复核（跨项目，未代提 issue）。
