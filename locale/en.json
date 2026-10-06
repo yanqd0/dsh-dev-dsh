@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "dsh out-of-tree plugin development manual",
+    "description": "dsh plugin for developing dsh plugins outside the harness repo: the out-of-tree authoring method (plugin classes, harness architecture, dogfooding and troubleshooting) ships as a skill that installs with the plugin, next to the plugin's own opt-in experimental submodules."
+  }
+}

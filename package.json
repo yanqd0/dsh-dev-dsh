@@ -26,12 +26,15 @@
     ".": "./dist/index.js",
     "./client": {
       "default": "./dist/client.js"
-    }
+    },
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
   },
   "sideEffects": false,
   "files": [
     "dist",
     "cordis.patch.yml",
+    "locale",
     "scripts/install-skill-postinstall.mjs"
   ],
   "dsh": {
