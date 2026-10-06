@@ -13,7 +13,7 @@ uv 的常规操作会写会话工作区之外的路径（`~/.cache/uv` 及其 `s
 2. 模型按工具提示把同一条命令重试为 `sandbox_permissions: danger-full-access`；
 3. 每次重试都是一次用户审批。
 
-chromosome 项目的一次会话（`~/.dsh/sessions/--home-user-yanqd0-chromosome--/session-7aa60fb5-…`）里：
+一次真实会话里：
 
 - 73 次 `bash` 调用，38 次带提权；uv 相关调用几乎全部提权，reason 形如
   `escalate sandbox to danger-full-access: uv 需要写全局缓存 ~/.cache/uv 才能运行 black/ruff/pytest…`；
@@ -25,7 +25,7 @@ chromosome 项目的一次会话（`~/.dsh/sessions/--home-user-yanqd0-chromosom
 
 ### 2.1 采纳：宿主 `uv` 工具（插件进程内执行）
 
-与 dsh-mint 的 `mint` 工具同构：插件自己的子进程不经过 `ctx.sandbox`——沙箱是 **bash 执行器**（`dsh-bash-sandbox`）在拼 `['bash','-c',cmd]` 时调 `ctx.sandbox.confine()` 施加的，`ctx.subprocess` 自身不施加限制。于是工具在插件进程内直接跑 uv：**无需授权、缓存与镜像配置照常可用、输出与退出码直通**。
+与该宿主的另一个进程内工具同构：插件自己的子进程不经过 `ctx.sandbox`——沙箱是 **bash 执行器**（`dsh-bash-sandbox`）在拼 `['bash','-c',cmd]` 时调 `ctx.sandbox.confine()` 施加的，`ctx.subprocess` 自身不施加限制。于是工具在插件进程内直接跑 uv：**无需授权、缓存与镜像配置照常可用、输出与退出码直通**。
 
 代价是明确的：**uv 及其子进程不再受会话文件沙箱约束**。这不比用户当前逐次批准的 `danger-full-access` 重试更宽，但它从「每次手动批准」变成「一次配置信任」。
 
@@ -41,12 +41,12 @@ uv 支持 `UV_CACHE_DIR`、`UV_PYTHON_INSTALL_DIR`、`UV_TOOL_DIR`、`UV_TOOL_BI
 
 ### 2.3 其他被否决/未采纳的路
 
-| 方案                                                   | 未采纳原因                                                                                                                                                                         |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 会话切 `danger-full-access`                            | 零开发，但整个会话（含非 uv 命令）失去文件沙箱；粒度太粗                                                                                                                           |
-| 实验性 Auto review 预设                                | 逐次调用都要模型复核，多花 token，且仍可能放行/误杀                                                                                                                                |
-| 自定义 `ctx.sandbox` provider 追加可写根               | 需要替换 base bundle 的 sandbox 服务并复刻 runner 选择与 profile 构建，成本与脆弱性都高；更适合作为上游 feature request（「可配置的额外可写根」）                                  |
-| 给 bash 里的 uv 提权做「同会话自动放行」的 approval 门 | dsh-mint 的 `isMintCommand` 只认裸命令，而实测 uv 调用大量是 `cd X && uv run …` / `uv run python - <<'PY'`；宽松匹配会把非 uv 提权一并放行。工具化用同一份能力达成目的且边界更清楚 |
+| 方案                                                   | 未采纳原因                                                                                                                                                                     |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 会话切 `danger-full-access`                            | 零开发，但整个会话（含非 uv 命令）失去文件沙箱；粒度太粗                                                                                                                       |
+| 实验性 Auto review 预设                                | 逐次调用都要模型复核，多花 token，且仍可能放行/误杀                                                                                                                            |
+| 自定义 `ctx.sandbox` provider 追加可写根               | 需要替换 base bundle 的 sandbox 服务并复刻 runner 选择与 profile 构建，成本与脆弱性都高；更适合作为上游 feature request（「可配置的额外可写根」）                              |
+| 给 bash 里的 uv 提权做「同会话自动放行」的 approval 门 | 既有宿主工具的裸命令匹配只认裸命令，而实测 uv 调用大量是 `cd X && uv run …` / `uv run python - <<'PY'`；宽松匹配会把非 uv 提权一并放行。工具化用同一份能力达成目的且边界更清楚 |
 
 ## 3. 工具契约
 
@@ -130,11 +130,11 @@ uv 支持 `UV_CACHE_DIR`、`UV_PYTHON_INSTALL_DIR`、`UV_TOOL_DIR`、`UV_TOOL_BI
   DSH_HOME=.tmp-accept/dsh-home dsh web --no-open --port 0
   # [uv-probe] count=1 names=uv        → 真实组合下已注册
   # [uv-probe] >>> --version           → uv 0.12.8 (aarch64-unknown-linux-gnu)
-  # [uv-probe] >>> cache dir           → /home/user/.cache/uv（共享缓存保留）
+  # [uv-probe] >>> cache dir           → ~/.cache/uv（共享缓存保留）
   # [uv-probe] >>> cache prune         → 未执行：缺少可询问的 agent（fail-closed）
   # 对照：uv.enabled: false → count=0、uv=ABSENT
   ```
 
   这组证据覆盖「注册 → 真实 `ctx.subprocess` 执行 → 共享缓存 → 危险类 fail-closed」；探针脚本与 patch 都在 `.tmp-accept/` 里，不随包发布。
 
-- 活性（需重启 harness）：chromosome 会话中 `["cache","dir"]` 输出 `~/.cache/uv`；`["sync"]`、`["run","pytest","-q"]` 零审批；`["cache","prune"]`/`["publish"]` 各首次一次审批、同会话再调免问；会话日志里 `tool/call.name = "uv"` 且上述零审批命令的 `approval/asked` 计数为 0。
+- 活性（需重启 harness）：一次实测会话中 `["cache","dir"]` 输出 `~/.cache/uv`；`["sync"]`、`["run","pytest","-q"]` 零审批；`["cache","prune"]`/`["publish"]` 各首次一次审批、同会话再调免问；会话日志里 `tool/call.name = "uv"` 且上述零审批命令的 `approval/asked` 计数为 0。

@@ -94,7 +94,7 @@ GitHub API 实测（2026-09-27）：
    `cordis.patch.yml` 必须进 `files`、显式 `config: {}`（zod object Config 缺省即 `invalid config`）、
    与 profile 手写 insert 并存会 `duplicate loader entry id`、client bundle 未预构建 →
    `MissingClientBundleError`、peer/dev 双声明、`allowBuilds`/`ERR_PNPM_IGNORED_BUILDS`。
-   证据：本项目作者在 `~/yanqd0/dsh-mint/AGENTS.md` 的「架构事实（DSH 调研结论，写码前复核）」
+   证据：作者在另一个 dsh 插件仓的 `AGENTS.md`「架构事实（DSH 调研结论，写码前复核）」
    与 `notes/dsh-plugin-dev.md` 里**已经手工重抄过一遍** —— 这就是"固化"的真实需求来源。
 3. **仓外 dev 循环编排与失败归因**（HMR 失效、client bundle 404、插件 PENDING 静默无报错）。
 4. **发布流程**（npm/GitHub Packages 双发、tarball、git + `prepare` + `allowBuilds`）。
@@ -146,7 +146,7 @@ name+description 目录，模型用 `skill({name})` 取 body（`packages/skill/t
      可发布的第三方 preset。**这是唯一有护城河、也最难被官方顺手覆盖的一块。**
   2. 一个 `check` 工具/命令：静态校验仓外包契约（patch 语法与 `insert:` 语义、`files` 清单、
      Config 必填、peer/dev 双声明、client bundle 存在性、与 profile 手写 insert 冲突检测）。
-     对照 `dsh-mint` 的 `src/package-manifest.test.ts` 思路，做成通用版。
+     对照另一插件仓的清单契约测试（`src/package-manifest.test.ts`）思路，做成通用版。
   3. （可选）`dsh --dump-config` 归因与 PENDING 静默失败的诊断封装。
 
 ### 5.3 明确不做
@@ -157,8 +157,8 @@ name+description 目录，模型用 `skill({name})` 取 body（`packages/skill/t
 ### 5.4 起步（建议 MVP）
 
 先只做 5.2-1（client bundle preset）+ 5.2-2（check），用一个真实消费方验收 ——
-就用你已有的 `@yanqd0/dsh-mint`（已有 host+client 面、`dist/`、`dsh.client`）或
-`dsh-covtrim` 作为第一个下游。skill 等二者跑通后再补，避免先写一堆会过时的文档。
+就用作者已有的一个消费方（host + client 双面、有 `dist/` 与 `dsh.client` 的 dsh 插件仓）
+作为第一个下游。skill 等二者跑通后再补，避免先写一堆会过时的文档。
 
 ## 六、风险
 
@@ -184,7 +184,7 @@ name+description 目录，模型用 `skill({name})` 取 body（`packages/skill/t
 
 原评估把"官方曾以零消费方删除同类工具链"列为高危。该风险由本项目自身的 dogfooding 消解：
 
-- 现有消费方：`@yanqd0/dsh-mint`、`dsh-covtrim`、`dsh-dev-dsh` 本身。
+- 现有消费方：作者的另外两个 dsh 插件仓，以及 `dsh-dev-dsh` 本身。
 - 未来：作者将持续开发更多 dsh 插件。
 - 含义：验收不依赖外部采用率；但也意味着**工具必须一开始就按"多消费方"设计**
   （可复用包 + 版本化契约），而不是为单个插件定制。
@@ -215,8 +215,8 @@ name+description 目录，模型用 `skill({name})` 取 body（`packages/skill/t
 ### 8.4 验收方式（dogfooding）
 
 每个支柱都必须由至少一个**真实插件仓库**跑通验收，而不是只写测试：
-以 `@yanqd0/dsh-mint`（已有 host + client 双面、`dist/`、`dsh.client`）作为第一个消费方，
-`dsh-covtrim` 与 `dsh-dev-dsh` 作为后续回归消费方。
+以一个已有 host + client 双面（`dist/`、`dsh.client`）的 dsh 插件仓作为第一个消费方，
+作者的另一个插件仓与 `dsh-dev-dsh` 作为后续回归消费方。
 
 ### 8.5 版本规划（定案）
 
@@ -289,7 +289,7 @@ name+description 目录，模型用 `skill({name})` 取 body（`packages/skill/t
 
 ### 8.9 外部项目实测结论（2026-10-04，plan #9 收口）
 
-**实测**：第一个真实消费方 dsh-mint 的会话复盘（`dsh-mint` 仓 `notes/session-cost-review.md` §4）给出第一份外部使用数据：
+**实测**：第一个真实消费方的会话复盘（该仓 `notes/session-cost-review.md` §4）给出第一份外部使用数据：
 只载入 L0（4,270 B），45 个 reference（331 KB）零载入，结论「本轮几乎没有直接产出价值」——
 原因是**顶层路由未被触发**（agent 直奔运行时硬事实），不是内容无用。
 
@@ -300,7 +300,7 @@ name+description 目录，模型用 `skill({name})` 取 body（`packages/skill/t
 
 ### 8.10 进程内 SQLite「compound SELECT 少行」复核（2026-10-06，plan #32 / issue #97）
 
-**背景**：mint 侧登记（`notes/decisions.md` D52、issue #524）称 rusqlite 0.39 + bundled SQLite 3.51.3 下
+**背景**：另一个项目登记的同类结论（该仓 `notes/decisions.md` D52）称 rusqlite 0.39 + bundled SQLite 3.51.3 下
 `SELECT 1 AS a UNION ALL SELECT 2` 经 `prepare`/`query` 只回最后一行，并据此在该仓禁用 compound SELECT。
 
 **复核方法与结果**（本地 `probe/sqlite-compound/`，gitignored scratch；rusqlite 0.39 `bundled`，实跑 `sqlite_version()` = 3.51.3）：
@@ -308,7 +308,7 @@ name+description 目录，模型用 `skill({name})` 取 body（`packages/skill/t
 - 8 条最小 SQL（UNION / UNION ALL / ORDER BY / `VALUES` / 多列 / CTE / 子查询包裹 / 三路 UNION ALL）
   各用 5 种取法（`stmt.query` 逐行、`query_map` + `collect`、`prepare_cached` + `query_map` + `collect`、
   `query_row`、迭代器 `.last()`）——除 `query_row` / `.last()` 本就只取一行外，**行数全部正确**。
-- mint 的**原始 SQL 形态**（`?2 IS NULL OR …` 谓词 + 两分支 + `ORDER BY`）与参数化双分支 UNION ALL 同样返回全部行。
+- 该仓的**原始 SQL 形态**（`?2 IS NULL OR …` 谓词 + 两分支 + `ORDER BY`）与参数化双分支 UNION ALL 同样返回全部行。
 - 上游 SQLite 3.51.0 的 EXISTS-to-JOIN compound 回归（[论坛复现](https://www2.sqlite.org/forum/forumpost/b9f09bda9c4f572f?t=c&unf)同形）
   在 bundled 3.51.3 上已修复，未复现；Node 22.19 的 `node:sqlite`（SQLite 3.50.4）同样正确。
 
@@ -317,4 +317,4 @@ name+description 目录，模型用 `skill({name})` 取 body（`packages/skill/t
 
 - **不收录进 skill**：手册不写无法复现的引擎缺陷。
 - 通用口径仍成立：同一 SQL 先换驱动 / CLI 对照；取全部行必须显式 `collect`（`query_row` / `.last()` 只取一行）。
-- mint #524 / D52 的结论建议该仓复核（跨项目，未代提 issue）。
+- 上述 D52 的结论建议该仓复核（跨项目，未代提 issue）。

@@ -104,11 +104,11 @@ DOM、React 时序）；或拿不到 devtools 断点、不能改安装树。前�
   `@deepseek-ai/dsh-cordis-client-runner` 提供，但该条目要在 profile 里挂载、工具还要在会话
   工具表里（本机当时 `absent`）。用前先查：`cordis_inspect_list` 有没有客户端 provider、
   当前会话工具表有没有这几个工具。
-- **mint 可能整体不可用**：本轮遇到宿主 `mint` 报 `Cannot find module 'mint-faa/run-mint.js'`、
+- **宿主工具可能整体不可用**：本轮遇到宿主工具子进程报 `Cannot find module '<dep>/run-*.js'`、
   CLI 报 `SQLite error: attempt to write a readonly database`——issue 记录会被阻塞，
   定位工作要继续，但"落 issue"要等工具恢复。
 
-## 八、下一步（已在 mint 立项）
+## 八、下一步（已在计划中登记）
 
 把本方法自动化到什么程度最划算，见 milestone `0.2.0` 的 plan「评估『客户端 Console
 只读探针』定位法的自动化」：候选方向与验收标准写在该 plan 的 body 里。
