@@ -435,6 +435,13 @@ const facts: Fact[] = [
     line: 304,
     note: 'plugin-manager 逐行以 profile 的 package.json 为 parentURL 调 readPluginMeta，把 meta 带进 bundle 列表',
   },
+  {
+    id: 'plugin-manager-reconcile-first-deps',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/boot/plugin-manager/src/operations.ts',
+    line: 102,
+    note: 'reconcile() 的「首次依赖」判据：before.dependencies 里已存在的名字直接跳过，不比对 bundles 与依赖的差集，故重跑 add 不会补齐挂载',
+  },
 
   // dsh 0.2.0：`skill/references/dsh/` 顶层页（架构 / 插件模型 / 扩展点 / 设计原理 / 概念）的指针。
   // 这些 fact 按 checkout 版本复核（见下方 census）；换基准时同步重校 pin。

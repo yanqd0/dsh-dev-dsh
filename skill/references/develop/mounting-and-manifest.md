@@ -85,12 +85,14 @@ dsh plugin --profile <p> remove <pkg>    # 依赖与层一起移除
 ### 5.1 `add` 什么时候才真的写进 `dsh.profile.bundles`
 
 `add` 本身不碰 bundles。**安装成功**之后 dsh 才做 reconcile：遍历 profile 里「**第一次出现**的依赖」，
-声明了 `dsh.bundle` 的追加进 bundles 并加载其 patch
-（`packages/boot/plugin-manager/src/operations.ts:242`、`:255`）。由此三个可观测行为：
+声明了 `dsh.bundle` 的追加进 bundles 并加载其 patch（`reconcile()`，
+`packages/boot/plugin-manager/src/operations.ts:89`；「首次依赖」判据在 `:102`，追加在 `:108`）。
+由此三个可观测行为：
 
 - `pnpm add` 退出码非 0（最典型是 `ERR_PNPM_IGNORED_BUILDS`）⟹ 不追加、不加载 patch。
   先按 `build-and-pitfalls.md` §2 放行构建脚本，再重装。
-- reconcile 只看**新**依赖。依赖已在 `node_modules` 里时，再跑一次 `add` 不会重试这一步；
+- reconcile 只看**新**依赖，且判据是「`after.dependencies` 里但 `before.dependencies` 里没有」（`:102`），
+  **不比对 bundles 与依赖的差集**。所以依赖一旦落进清单，重跑 `add` 不会自愈这个不一致态：
   用 `dsh plugin --profile <p> remove <pkg>` 再 `add` 才是可复现的重试路径。
 - 层内的 entry **id 落定在 boot**：`add` 阶段 profile 目录还没有 `cordis.yml`，
   要看实际挂载的 id 与 `config`，用 `--dump-config`，不要看 `add` 的输出。
