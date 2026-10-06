@@ -7,19 +7,9 @@
 
 单包，无 workspace。`0.1.0` 只覆盖**宿主面**；客户端 / UI 插件属 `0.2.0`（见 `notes/evaluation.md` §8.5）。核心交付物是 **skill 随插件安装**：`skill/SKILL.md` 经构建进入 `dist/skill`，随 npm 包发布，并在插件加载或 postinstall 时同步到 `~/.dsh/skills/dsh-dev-dsh`。
 
-skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无关）+ 多级 `references/`，按三大类（插件开发 / dsh 本体 / dogfood 与定位）组织，让 agent 不读 dsh 源码即可开发插件与定位问题；结构契约以 `notes/skill-design.md` 为权威。内容基准 = 本机运行时的 dsh 版本；**具体基准只在 skill 的版本页声明**（`skill/references/dsh/versions/index.md`），本文件不写死版本号（理由见 `notes/evaluation.md` §8.6、§8.7）。
+skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无关）+ 多级 `references/`，按三大类（插件开发 / dsh 本体 / dogfood 与定位）组织，让 agent 不读 dsh 源码即可开发插件与定位问题；结构契约以 `notes/skill-design.md` 为权威。内容基准 = 运行环境实际携带的 dsh 版本；**具体基准只在 skill 的版本页声明**（`skill/references/dsh/versions/index.md`），本文件不写死版本号（理由见 `notes/evaluation.md` §8.6、§8.7）。
 
 本仓除「skill + 宿主插件」之外，**长期承载试验性、不稳定的子模块**（小插件）：先在仓内 dogfood、边界清楚后再剥离为独立插件项目。第一个是 `src/uv/`（宿主 `uv` 工具，见 `notes/uv.md`），第二个是 `src/keyboard/`（提示卡 Enter/↑↓ 补位的客户端半边，见 `notes/keyboard.md`）。子模块一律**默认关闭**、由 profile 显式开启，且不得让本包既有能力（skill 同步）或 profile 启动失败。
-
-同类项目盘点（本仓项目级文件的写法依据）：
-
-| 仓库          | 项目级文件                                | 形态                                                                                                      |
-| ------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| `dsh-mint`    | `AGENTS.md`                               | 中文「项目导航」：# 定位 / ## 硬约束 / ## issue 计划管理（mint）/ ## 架构事实 / ## 常用命令 / ## 文档导航 |
-| `dsh-covtrim` | `CLAUDE.md`                               | 同结构，少「架构事实」节                                                                                  |
-| `covtrim`     | `CLAUDE.md` + `CONTRIBUTING.md` + `docs/` | 旧形态（非 dsh 插件仓）                                                                                   |
-
-共性：只写「模型看不见的仓内事实」，命令块固定为 `pnpm build|test|lint|check-types`。本仓随当前工具链取「只建 `AGENTS.md`」（不建 `CLAUDE.md`，避免双份同步）。
 
 ## 硬约束
 
@@ -41,17 +31,11 @@ skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无�
 - **试验性子模块 #2（`src/keyboard/`）的硬约束**：默认 `keyboard.enabled: false`（且该开关由**浏览器半边**判定——浏览器读不到挂载行）；浏览器半边不 import 任何 `@deepseek-ai/*` 值、不请求 module-table 词；`observeFixedInput` 只补「无卡外焦点」的缺口，**不 `consume()`**、不改上游行为；服务缺失/重复 id 只记一行 warn，**绝不使整页启动失败**；产物 `dist/client.js` 由 `scripts/build-client.mjs` 生成并自检，产物契约与上游耦合面以 `notes/keyboard.md` 为准。
 - **提交风格**：每个逻辑变更独立 commit，Angular / Conventional 前缀 + 中文描述（`feat:` / `fix:` / `docs:` / `chore:` / `ci:`）。
 
-## issue / 计划管理（mint）
-
-- issue / plan / milestone 由 mint 管理（每项目独立 db，按会话 cwd 定位）；流程见 mint skill。
-- **在 DSH 会话里一律走宿主 `mint` 工具**（`mint({ args: [...] })`）：插件进程内执行，不经 bash、不进沙箱、零授权。**不要用 bash 跑 mint**——会触发沙箱拒绝与提权审批。
-- **默认挂当前 running milestone**：新 plan / 独立 issue 默认挂它（同刻有且仅有一个）；无 running 时按 semver 推测候选并**询问用户**，勿自行置位。
-- **改码前门禁**：改某个 issue 的代码前先 `issue state start <id>`；同 plan 统一测试后 `plan close <plan> --test-cmd "<命令>"`。
-- **mint 的两套状态机按 kind 分**：改码类 issue 用 `kind=requirement`，走六态（`planned --start--> dev --commit --sha--> test`，`commit` 必须带 `--sha`）；文档 / 杂务类用 `kind=task`，**跳过 dev**（`planned --start--> test`，`test --retest--> planned`，`state commit` 报 `invalid transition: task kind does not use git commit`）。两类都靠 commit message 里的 issue 号 + close 时的 `--test-cmd` 留证。
-
 ## 写作约定（文档语言）
 
-本仓文档（`AGENTS.md` / `notes/` / `skill/`）**以中文为主导，只保留一份**，不写中英双份：正文用中文；代码标识符、API / 字段 / 文件名、命令、路径与原样错误串保留英文（中英混排）。官方上游内容只作参考，不整段照抄——能路由就路由。
+**语言分工**：对外文档 `README.md` / `CONTRIBUTING.md` 用英文；对内文档 `AGENTS.md` / `notes/` / `skill/` **以中文为主导，只保留一份**，不写中英双份——正文用中文；代码标识符、API / 字段 / 文件名、命令、路径与原样错误串保留英文（中英混排）。官方上游内容只作参考，不整段照抄——能路由就路由。
+
+**项目级文件纪律**：只写「模型看不见的仓内事实」，命令块固定为 `pnpm build|test|lint|check-types`；本仓只建 `AGENTS.md`（不建 `CLAUDE.md`，避免双份同步）；本文件只放导航与硬约束，工作流细节放 `CONTRIBUTING.md`、skill 正文归 `skill/`。
 
 **术语**：dsh 的领域概念（bounded context、aggregate、capability seam、scope、projection…）一律用英文原词，不另造中文译名；中英对照关系只在 `skill/references/dsh/concept-model.md` 维护一处。**版本**：正文不写「当前是哪个版本」，基准只在 skill 的版本页声明（见上「硬约束」）。
 
@@ -65,6 +49,7 @@ pnpm test:coverage      # vitest + coverage：lines/functions/statements 80、br
 pnpm check-types        # tsc --noEmit
 pnpm lint               # eslint src
 pnpm format             # prettier --write .
+pnpm format:check       # prettier --check .（CI 门禁）
 pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 ```
 
@@ -77,14 +62,15 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `cordis.patch.yml`：挂载声明（见上「硬约束」），必须随包发布。
 - `scripts/`：`build-skill.mjs`（拷 skill）、`build-client.mjs`（esbuild 打包客户端半边 + 手写 `window.__ModuleLoader__.load` wrapper 并自检产物）、`install-skill-postinstall.mjs`（postinstall 守卫：`dist/install-skill.js` 不存在时静默跳过）。
 - `skill/`：skill 单一真源。`SKILL.md` = **L0 薄入口**（使用协议、插件分类轴、三类路由、L1 索引表；不含上游路径 / 版本号 / pin）；`references/<大类>/index.md` = 大类入口（当前 `develop`、`dsh`、`dogfood`），再往下是页面与占位索引，层级与契约见 `notes/skill-design.md`。正文引用上游路径必须同步登记 fact；占位页转正式时必须删掉占位标记。
-- `notes/evaluation.md`：方向评估与决策记录（含 §8 决策、§8.5 版本规划、§8.6 skill 定位修订），是「为什么这样定位」的权威来源；`notes/skill-design.md` 是 skill 结构契约的权威（层级 / 命名 / 索引与引用 / 版本维度 / 占位纪律 / 演进步骤）；`notes/dsh-old/` 是指向 `../../my-agents/notes/dsh` 的**本机符号链接**，在别的机器上是 dangling，不作为项目内容。
+- `notes/evaluation.md`：方向评估与决策记录（含 §8 决策、§8.5 版本规划、§8.6 skill 定位修订），是「为什么这样定位」的权威来源；`notes/skill-design.md` 是 skill 结构契约的权威（层级 / 命名 / 索引与引用 / 版本维度 / 占位纪律 / 演进步骤）。
 - `3rdp/`：**开发期本地参考**，gitignored。当前只有 dsh 代码库的只读快照（`deepseek-harness`），用于源码考古；**测试 / 生产（用户环境安装）下默认不存在，且不存在时构建、运行、`pnpm test` 全部正常**。未来可能增补其它参考（如 cordis，是否纳入待评估）；增补时须同步 `src/facts.test.ts` 的 fact 清单。
 - `src/facts.test.ts`：`skill/**` 中 dsh 事实的**唯一可校验来源**。每条 fact 记 `source`（`<repo>@<tag>`）、`path`、可选 `line`、`note`；多个 tag 可并存（当前内容面 + 历史页）。元数据断言始终执行：上游路径必须都已登记、`skill/**` 的**结构契约**（L0 恰好索引全部入口页、目录索引覆盖本目录成员、全图从 `SKILL.md` 可达、无死链、每页有回链、命名 kebab-case）。校验层只在 `3rdp/<repo>/` 存在时才跑，且**按版本**复核：只查 pin 与 checkout 同版本的 fact，其它版本跳过、不失败。**无 `3rdp/` 时不报错、不告警**——那是测试/生产环境的常态。`skill/**` 每引用一条上游事实，必须同步加一条 fact，反之亦然。
-- `README.md`（英，对外）/ `AGENTS.md`（中，对内）；计划真源是 mint 里的 plan / issue，**不是**任何 md 文档。
+- `README.md`（英，对外，只写安装与使用）/ `CONTRIBUTING.md`（英，开发流程）/ `AGENTS.md`（中，AI 导航与硬约束）；计划真源是 mint 里的 plan / issue，**不是**任何 md 文档。
 
 ## 文档导航
 
-- `README.md`：项目介绍、Status、Layout、Development。
+- `README.md`：对外门面——项目介绍、安装、使用、两个默认关闭的子模块怎么开。
+- `CONTRIBUTING.md`：开发流程——命令、目录、dogfooding、`notes/` 与 `3rdp/`、发布流程。
 - `AGENTS.md`（本文件）：项目导航与硬约束。
 - `notes/evaluation.md`：方向评估、决策与版本规划。
 - `notes/skill-design.md`：skill 结构契约与外置手册设计指南（层级 / 命名 / 索引与引用 / 版本维度 / 术语与语言纪律 / 保鲜纪律 / 占位纪律 / 演进步骤 / plan 边界）。
@@ -93,12 +79,12 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `notes/resource-preview-protocol-bug.md`：文件/计划预览「不可用」的问题记录（现象 / 根因 / 解决方案；上游 issue 素材）。
 - `notes/uv.md`：试验性子模块 #1（宿主 `uv` 工具）的设计与取舍——现象证据、为什么不用「重定向 uv 的 home 态目录」、工具与审批契约、信任边界、开启方式、已知限制与剥离路径。
 - `notes/keyboard.md`：试验性子模块 #2（提示卡 Enter/↑↓ 补位客户端半边）的设计与取舍——三张卡的焦点缺口证据、为什么否决 patch/重写、声明与挂载、开关为何在浏览器侧、上游耦合面与重核清单、已知限制与剥离路径。
-- mint plan / issue：计划与进度真源（本仓当前：milestone `0.1.0`；具体 plan 号以 `mint plan list` 为准，不在此处写死）。
+- mint plan / issue：计划与进度真源（流程见随包安装的 `mint` skill；具体 plan / milestone 号以 `mint` 为准，不在此处写死）。
 
 ## 不要做
 
 - 不把 skill 正文写进 `AGENTS.md` / `README.md`：这里只放导航与硬约束；skill 内容归 `skill/`。
 - 不在 `0.1.0` 的文档或 skill 中承诺客户端插件的构建配方。
 - 不复制 `notes/evaluation.md` 的结论进 `AGENTS.md`：这里只放导航与硬约束，理由留在原文。
-- 不把 `notes/dsh-old` 当项目内容（本机符号链接）。
+- 不引用本机专属内容（其它项目仓、绝对路径、本机符号链接）：本仓文档要对任何克隆都成立。
 - 不让 `3rdp/` 的缺失成为任何测试、构建或安装的阻塞条件。
