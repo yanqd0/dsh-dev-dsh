@@ -42,6 +42,25 @@
 `permission-presets` 把这件事收成组合：每个 preset 名 = 一个 sandbox mode + 一个 approval policy
 （`packages/interaction/permission-presets/README.md:32`），所以插件的信任姿态最终由 profile 的 preset 决定。
 
+### 2.1 沙箱判据：可写根之外的拒写面与多进程失败形态
+
+写工具链的测试或检查脚本时，最容易把**沙箱限制**误读成代码 bug。判据是：
+
+- 拒写面**不限于** `~/.cache`。`workspace-write` 还会拒写 `/dev/shm`——即使它是 `drwxrwxrwt`；
+  stderr 常带 `landlock-run: partial enforcement (older Landlock ABI)`。
+- 后果是 **POSIX 信号量建不出来**：Python `multiprocessing` 的 `ctx.Lock()` / `ctx.Queue()` /
+  `SemLock` 抛 `PermissionError: [Errno 13] Permission denied`，`ProcessPoolExecutor` 一提交就失败。
+  任何依赖真实子进程或锁的用例在 bash 里**必然红**，报错形态却像被测代码坏了。
+- 同一沙箱内 `uv` 自己的缓存也写不了（`Failed to initialize cache at …: Permission denied`），
+  于是仓库自带的一键检查入口、pre-commit hook 这类内部调 `uv` 的链路一起失败。
+
+**绕行判据（实测有效）**：把命令改从**宿主工具**跑，而不是从会话 bash 跑。宿主工具的进程走插件
+进程内的 `ctx.subprocess`，不受会话文件沙箱约束（见本节开头两条含义），例如本仓的 `uv` 工具：
+`uv run <命令>` 可以跑通 `bash` 里必红的进程池用例与 `uv cache` 写入。反过来这也是一条**验证手法**：
+同一条命令在 bash 里红、在宿主工具里绿，就说明失败来自沙箱而非代码。
+
+设计与取舍见 `notes/uv.md`；代价面（哪些危险操作会先问一次）见 `references/develop/approval-and-escalation.md`。
+
 如果你要**自己**施加 confine（而不是用 bash 执行器），seam 侧契约是
 `confine(argv, policy, signal?) → ConfinedArgv`：调用方 spawn 返回的 argv 以替代自己的
 （`packages/sandbox/sandbox/src/index.ts:177`）。它是 fail-closed 的：confined mode 下没有可用 runner 时

@@ -69,6 +69,11 @@
    调用括号之间语法合法但语义已坏。→ 优先只读探针；非要改就先备份、插在两个完整语句之间、`node --check`
    **且**做语义自检、用完还原（纪律全文见 `client-console-diagnosis.md` §6）。
 
+10. **把沙箱限制当代码 bug**：`workspace-write` 会拒写 `/dev/shm`（哪怕它是 `drwxrwxrwt`），
+    POSIX 信号量随之建不出来，`multiprocessing` 的锁/队列抛 `PermissionError [Errno 13]`，
+    进程池用例在 bash 里必然红。→ 先判「只有 bash 红、宿主工具绿」，再谈代码；
+    判据与绕行见 `references/develop/subprocess-and-trust.md` §2.1。
+
 ## 5. 验收样例（历史案例）
 
 样本：计划预览报「计划预览不可用」、文件预览报「文件资源服务不可用」，同一浏览器里终端正常。
