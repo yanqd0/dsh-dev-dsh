@@ -131,6 +131,23 @@
 > ③ 只替换表达式片段、漏掉行首 `return` → `return return …`。
 > 三次都语法合法或接近合法 ⟹ 唯一可靠的护栏是**语义自检 + 幂等时复验语义**。
 
+## 6.5 判据化：浏览器 `URL` 字段语义不能当机制用
+
+上述第 5 节第 3 条与 §6 的自检样例，指向一条可复用的判据——它不是本案专属：
+
+- **现象**：某功能「只在页面里不可用」（预览报不可用、面板空白），服务端日志干净、Node 单测全绿。
+- **判据**：该功能的取值链上有一处 **`URL` 字段访问**（`hostname` / `protocol` / `pathname`），
+  而地址来自自定义 scheme。Chromium 对 `dsh-resource://file/…` 给 `hostname === ""`
+  （`file` 是**特殊 scheme 名**，authority 落进 `pathname`），Node 给 `"file"`——
+  **同一字符串，两个平台解析出不同字段**（`packages/client/resources/src/client/resources.ts:56`，
+  记录落到 `idle("none")` 的消费点见 `:120`）。
+- **自证**（不装 harness、不开浏览器）：对同一地址分别跑 Node 与浏览器 Console，打印
+  `new URL(address)` 的字段，比较 `hostname` / `pathname`；再对**你自己的解析函数**喂同一地址断言返回值
+  （§6 的语义自检法）。两侧不一致 ⟹ 命中本判据，不要去查注册与生命周期。
+- **修法方向**：解析**不看 `hostname`**（如直接对 `//` 后第一段做正则），或改用不吃 scheme 歧义的地址形态；
+  **回归护栏**：把「浏览器解析」也纳入断言——只跑 Node 单测测不出这条。
+- **别做的事**：不要把消费侧缺陷当成自己插件的生命周期问题；也不要靠手改安装树维持（见 §6）。
+
 ## 7. 与另三页的分工
 
 - `references/dogfood/runtime-evidence.md`：证据在哪、怎么取（宿主进程输出 / 启动失败报告 / 操作日志 / logger sink），
