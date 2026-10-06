@@ -53,6 +53,7 @@
     "test:coverage": "vitest run --coverage",
     "lint": "eslint src",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "check-types": "tsc --noEmit",
     "pack:check": "pnpm pack --dry-run"
   },
