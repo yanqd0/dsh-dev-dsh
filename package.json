@@ -1,6 +1,6 @@
 {
   "name": "@yanqd0/dsh-dev-dsh",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.1",
   "description": "dsh plugin for developing dsh plugins: ships the out-of-tree authoring method as a skill that installs with the plugin, plus opt-in experimental submodules",
   "type": "module",
   "license": "MIT",
