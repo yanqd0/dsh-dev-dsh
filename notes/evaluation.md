@@ -286,3 +286,14 @@ name+description 目录，模型用 `skill({name})` 取 body（`packages/skill/t
 - **子模块纪律**（已写入 `AGENTS.md` 硬约束）：不得使 skill 同步或 profile 启动失败；
   默认关闭；边界清楚（`src/uv/` 可整目录搬走）。
 - **不变**：skill 仍是核心交付物与单一真源；本子模块不进 skill 正文。
+
+### 8.9 外部项目实测结论（2026-10-04，plan #9 收口）
+
+**实测**：第一个真实消费方 dsh-mint 的会话复盘（`dsh-mint` 仓 `notes/session-cost-review.md` §4）给出第一份外部使用数据：
+只载入 L0（4,270 B），45 个 reference（331 KB）零载入，结论「本轮几乎没有直接产出价值」——
+原因是**顶层路由未被触发**（agent 直奔运行时硬事实），不是内容无用。
+
+- **去向**：该轮列出的 5 条缺口（loader 包装形态、PLATFORM_MODULES 基线、右侧边栏 seat、
+  静态插件 host↔client 通道、webServer 前缀尾斜杠）已全部回灌为 plan #20 的 #72/#73/#74，技能内可逐条查到。
+- **含义**：手册价值取决于「首次载入就选中入口」，后续改 L0 路由按此衡量（结构契约仍以 `notes/skill-design.md` 为准）。
+- **剩余面**：「发布源装包后的跨项目复测」归 issue #24，本 plan 不再单起验证轮次。
