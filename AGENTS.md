@@ -34,7 +34,7 @@ skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无�
 
 ## 写作约定（文档语言）
 
-**语言分工**：对外文档里 `README.md`（英）与 `README.zh.md`（中）是**必须同步的双语对**（见上「硬约束」，`src/docs.test.ts` 校验），`CONTRIBUTING.md` 只有英文一份；对内文档 `AGENTS.md` / `notes/` / `skill/` **以中文为主导，只保留一份**，不写中英双份——正文用中文；代码标识符、API / 字段 / 文件名、命令、路径与原样错误串保留英文（中英混排）。官方上游内容只作参考，不整段照抄——能路由就路由。
+**语言分工**：对外文档里 `README.md`（英）与 `README.zh.md`（中）是**必须同步的双语对**（见上「硬约束」，`src/docs.test.ts` 校验），`CONTRIBUTING.md` 只有英文一份，`CHANGELOG.md` 只有中文一份（与 commit / tag message 同语）；对内文档 `AGENTS.md` / `notes/` / `skill/` **以中文为主导，只保留一份**，不写中英双份——正文用中文；代码标识符、API / 字段 / 文件名、命令、路径与原样错误串保留英文（中英混排）。官方上游内容只作参考，不整段照抄——能路由就路由。
 
 **项目级文件纪律**：只写「模型看不见的仓内事实」，命令块固定为 `pnpm build|test|lint|check-types`；本仓只建 `AGENTS.md`（不建 `CLAUDE.md`，避免双份同步）；本文件只放导航与硬约束，工作流细节放 `CONTRIBUTING.md`、skill 正文归 `skill/`。
 
@@ -66,12 +66,13 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `notes/evaluation.md`：方向评估与决策记录（含 §8 决策、§8.5 版本规划、§8.6 skill 定位修订），是「为什么这样定位」的权威来源；`notes/skill-design.md` 是 skill 结构契约的权威（层级 / 命名 / 索引与引用 / 版本维度 / 占位纪律 / 演进步骤）。
 - `3rdp/`：**开发期本地参考**，gitignored。当前只有 dsh 代码库的只读快照（`deepseek-harness`），用于源码考古；**测试 / 生产（用户环境安装）下默认不存在，且不存在时构建、运行、`pnpm test` 全部正常**。未来可能增补其它参考（如 cordis，是否纳入待评估）；增补时须同步 `src/facts.test.ts` 的 fact 清单。
 - `src/facts.test.ts`：`skill/**` 中 dsh 事实的**唯一可校验来源**。每条 fact 记 `source`（`<repo>@<tag>`）、`path`、可选 `line`、`note`；多个 tag 可并存（当前内容面 + 历史页）。元数据断言始终执行：上游路径必须都已登记、`skill/**` 的**结构契约**（L0 恰好索引全部入口页、目录索引覆盖本目录成员、全图从 `SKILL.md` 可达、无死链、每页有回链、命名 kebab-case）。校验层只在 `3rdp/<repo>/` 存在时才跑，且**按版本**复核：只查 pin 与 checkout 同版本的 fact，其它版本跳过、不失败。**无 `3rdp/` 时不报错、不告警**——那是测试/生产环境的常态。`skill/**` 每引用一条上游事实，必须同步加一条 fact，反之亦然。
-- `README.md` + `README.zh.md`（英 / 中，对外双语对，只写安装与使用）/ `CONTRIBUTING.md`（英，开发流程）/ `AGENTS.md`（中，AI 导航与硬约束）；计划真源是 mint 里的 plan / issue，**不是**任何 md 文档。
+- `README.md` + `README.zh.md`（英 / 中，对外双语对，只写安装与使用）/ `CONTRIBUTING.md`（英，开发流程）/ `CHANGELOG.md`（中，每个已发布版本一条）/ `AGENTS.md`（中，AI 导航与硬约束）；计划真源是 mint 里的 plan / issue，**不是**任何 md 文档。
 
 ## 文档导航
 
 - `README.md` / `README.zh.md`：对外门面（英 / 中双语对，必须同步）——项目介绍、安装、使用、两个默认关闭的子模块怎么开。
 - `CONTRIBUTING.md`：开发流程——命令、目录、dogfooding、`notes/` 与 `3rdp/`、发布流程。
+- `CHANGELOG.md`：每个已发布版本一条摘要（中文，最新在上）；正文与 tag message 同源，正式版本发布前先落地条目。
 - `AGENTS.md`（本文件）：项目导航与硬约束。
 - `notes/evaluation.md`：方向评估、决策与版本规划。
 - `notes/skill-design.md`：skill 结构契约与外置手册设计指南（层级 / 命名 / 索引与引用 / 版本维度 / 术语与语言纪律 / 保鲜纪律 / 占位纪律 / 演进步骤 / plan 边界）。

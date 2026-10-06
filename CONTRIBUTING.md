@@ -17,9 +17,8 @@ is not published, and an author therefore re-derives the same contracts and re-c
 failure modes in every plugin repository. The evidence and the scope decisions are in
 [notes/evaluation.md](notes/evaluation.md).
 
-**Status: 0.1.0-alpha.** The version stays in the `0.1.0-alpha.N` line until 0.1.0 is released.
-0.1.0 covers the host face and the manual; client/UI plugin categories and static checks for the
-out-of-tree package contract are planned for 0.2.0+.
+**Status: 0.1.0.** The 0.1.0 line covers the host face and the manual; client/UI plugin categories
+and static checks for the out-of-tree package contract are planned for 0.2.0+.
 
 ## Prerequisites
 
@@ -118,6 +117,8 @@ versa. Do not make a missing `3rdp/` block any test, build or install.
   two languages, the same sections in the same order, each opening with a link to the other. Change
   both sides in the same commit — `src/docs.test.ts` checks the cross-links, the badge block and the
   heading structure.
+- `CHANGELOG.md` — Chinese only, like the commit and tag messages it is written from; one
+  `## <version>` entry per shipped version, newest first.
 - `CONTRIBUTING.md` — English only; there is no translated twin.
 - `AGENTS.md` / `notes/` / `skill/` — Chinese-dominant, inward-facing (AI navigation, records, the
   manual itself). Identifiers, commands and paths stay English.
@@ -150,7 +151,8 @@ Then open the package on npmjs and register this repository plus
 **Later releases (CI).** Pushing a tag whose name is the version (with or without a `v` prefix)
 runs `.github/workflows/publish-npm.yml`:
 
-- `gate` fails unless the tag equals `package.json`'s version. A version containing `-`
+- `gate` fails unless the tag equals `package.json`'s version — so a stable release lands its
+  `CHANGELOG.md` entry and the `package.json` bump **before** the tag. A version containing `-`
   (`0.1.0-alpha.1`) is a prerelease: the pipeline stops after `test`, publishes nothing and creates
   no GitHub Release.
 - Stable versions publish to npmjs over OIDC (`--provenance`, no token), then to GitHub Packages
@@ -160,11 +162,11 @@ runs `.github/workflows/publish-npm.yml`:
   pipeline half-failed completes instead of failing on "cannot publish over the existing version".
 
 ```sh
-git tag 0.1.0 && git push origin 0.1.0                     # stable: publishes and releases
-git tag v0.1.0-alpha.2 && git push origin v0.1.0-alpha.2   # prerelease: gate + test only
+git tag 0.2.0 && git push origin 0.2.0                     # stable: publishes and releases
+git tag v0.2.0-alpha.2 && git push origin v0.2.0-alpha.2   # prerelease: gate + test only
 ```
 
-Version numbers in a prerelease line stay in that line (`0.1.0-alpha.N`) until 0.1.0 itself ships.
+Version numbers in a prerelease line stay in that line (`0.2.0-alpha.N`) until 0.2.0 itself ships.
 
 ## Design records
 

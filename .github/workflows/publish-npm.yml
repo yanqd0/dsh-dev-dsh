@@ -131,7 +131,7 @@ jobs:
           fi
 
   release:
-    # GitHub Release：两条注册表都成功后才建；notes 从本 tag 的 commit 生成（本仓无 CHANGELOG）。
+    # GitHub Release：两条注册表都成功后才建；notes 由本 tag 的 commit 生成（CHANGELOG 不参与 Release notes）。
     needs: [gate, test, publish, publish-github]
     runs-on: ubuntu-latest
     permissions:
