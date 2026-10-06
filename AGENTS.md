@@ -29,11 +29,12 @@ skill 的目标形态是**外置 dsh 开发手册**：L0 薄入口（版本无�
 - **`ctx.webServer` 路由：`prefix` 的 `path` 不带尾斜杠**：注册 `/my-plugin/` 会漏掉 `/my-plugin/x`，请求落 SPA fallback，表现为 200 返回 index.html 或 404 空 body（细节见那页 §7）。
 - **试验性子模块 #1（`src/uv/`）的硬约束**：默认 `uv.enabled: false`，只有 profile 覆盖行显式开启才注册工具；uv 只经 `ctx.subprocess` 执行，**不自己 `spawn`**；风险分类表是 `src/uv/policy.ts` 的 pinned 常量，改动必须同步单测；注册重名/服务缺失只记一行日志并返回 `{ ok: false }`，**绝不使插件加载失败**；设计取舍与「为什么不重定向 uv 的 home 态目录」以 `notes/uv.md` 为准。
 - **试验性子模块 #2（`src/keyboard/`）的硬约束**：默认 `keyboard.enabled: false`（且该开关由**浏览器半边**判定——浏览器读不到挂载行）；浏览器半边不 import 任何 `@deepseek-ai/*` 值、不请求 module-table 词；`observeFixedInput` 只补「无卡外焦点」的缺口，**不 `consume()`**、不改上游行为；服务缺失/重复 id 只记一行 warn，**绝不使整页启动失败**；产物 `dist/client.js` 由 `scripts/build-client.mjs` 生成并自检，产物契约与上游耦合面以 `notes/keyboard.md` 为准。
+- **对外 README 是双语对**：`README.md`（英）与 `README.zh.md`（中）**必须在同一次改动里两侧同改**——同结构、同小节顺序、顶部各带语言切换相对链接、badge 块一致；`src/docs.test.ts` 是机器校验。`CONTRIBUTING.md` 只有英文一份，不建中文版。
 - **提交风格**：每个逻辑变更独立 commit，Angular / Conventional 前缀 + 中文描述（`feat:` / `fix:` / `docs:` / `chore:` / `ci:`）。
 
 ## 写作约定（文档语言）
 
-**语言分工**：对外文档 `README.md` / `CONTRIBUTING.md` 用英文；对内文档 `AGENTS.md` / `notes/` / `skill/` **以中文为主导，只保留一份**，不写中英双份——正文用中文；代码标识符、API / 字段 / 文件名、命令、路径与原样错误串保留英文（中英混排）。官方上游内容只作参考，不整段照抄——能路由就路由。
+**语言分工**：对外文档里 `README.md`（英）与 `README.zh.md`（中）是**必须同步的双语对**（见上「硬约束」，`src/docs.test.ts` 校验），`CONTRIBUTING.md` 只有英文一份；对内文档 `AGENTS.md` / `notes/` / `skill/` **以中文为主导，只保留一份**，不写中英双份——正文用中文；代码标识符、API / 字段 / 文件名、命令、路径与原样错误串保留英文（中英混排）。官方上游内容只作参考，不整段照抄——能路由就路由。
 
 **项目级文件纪律**：只写「模型看不见的仓内事实」，命令块固定为 `pnpm build|test|lint|check-types`；本仓只建 `AGENTS.md`（不建 `CLAUDE.md`，避免双份同步）；本文件只放导航与硬约束，工作流细节放 `CONTRIBUTING.md`、skill 正文归 `skill/`。
 
@@ -65,11 +66,11 @@ pnpm pack:check         # pnpm pack --dry-run，核对实际发布内容
 - `notes/evaluation.md`：方向评估与决策记录（含 §8 决策、§8.5 版本规划、§8.6 skill 定位修订），是「为什么这样定位」的权威来源；`notes/skill-design.md` 是 skill 结构契约的权威（层级 / 命名 / 索引与引用 / 版本维度 / 占位纪律 / 演进步骤）。
 - `3rdp/`：**开发期本地参考**，gitignored。当前只有 dsh 代码库的只读快照（`deepseek-harness`），用于源码考古；**测试 / 生产（用户环境安装）下默认不存在，且不存在时构建、运行、`pnpm test` 全部正常**。未来可能增补其它参考（如 cordis，是否纳入待评估）；增补时须同步 `src/facts.test.ts` 的 fact 清单。
 - `src/facts.test.ts`：`skill/**` 中 dsh 事实的**唯一可校验来源**。每条 fact 记 `source`（`<repo>@<tag>`）、`path`、可选 `line`、`note`；多个 tag 可并存（当前内容面 + 历史页）。元数据断言始终执行：上游路径必须都已登记、`skill/**` 的**结构契约**（L0 恰好索引全部入口页、目录索引覆盖本目录成员、全图从 `SKILL.md` 可达、无死链、每页有回链、命名 kebab-case）。校验层只在 `3rdp/<repo>/` 存在时才跑，且**按版本**复核：只查 pin 与 checkout 同版本的 fact，其它版本跳过、不失败。**无 `3rdp/` 时不报错、不告警**——那是测试/生产环境的常态。`skill/**` 每引用一条上游事实，必须同步加一条 fact，反之亦然。
-- `README.md`（英，对外，只写安装与使用）/ `CONTRIBUTING.md`（英，开发流程）/ `AGENTS.md`（中，AI 导航与硬约束）；计划真源是 mint 里的 plan / issue，**不是**任何 md 文档。
+- `README.md` + `README.zh.md`（英 / 中，对外双语对，只写安装与使用）/ `CONTRIBUTING.md`（英，开发流程）/ `AGENTS.md`（中，AI 导航与硬约束）；计划真源是 mint 里的 plan / issue，**不是**任何 md 文档。
 
 ## 文档导航
 
-- `README.md`：对外门面——项目介绍、安装、使用、两个默认关闭的子模块怎么开。
+- `README.md` / `README.zh.md`：对外门面（英 / 中双语对，必须同步）——项目介绍、安装、使用、两个默认关闭的子模块怎么开。
 - `CONTRIBUTING.md`：开发流程——命令、目录、dogfooding、`notes/` 与 `3rdp/`、发布流程。
 - `AGENTS.md`（本文件）：项目导航与硬约束。
 - `notes/evaluation.md`：方向评估、决策与版本规划。

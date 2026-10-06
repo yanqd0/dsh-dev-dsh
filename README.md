@@ -3,6 +3,8 @@
 [![CI](https://github.com/yanqd0/dsh-dev-dsh/actions/workflows/ci.yml/badge.svg)](https://github.com/yanqd0/dsh-dev-dsh/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/v/@yanqd0/dsh-dev-dsh.svg)](https://www.npmjs.com/package/@yanqd0/dsh-dev-dsh)
 
+English | [中文](README.zh.md)
+
 A [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) plugin that ships an
 **out-of-tree** dsh plugin development manual as a skill: installing the plugin installs the manual
 with it.

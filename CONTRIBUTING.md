@@ -114,9 +114,15 @@ versa. Do not make a missing `3rdp/` block any test, build or install.
 
 ## Documentation split
 
-- `README.md` / `CONTRIBUTING.md` — English, outward-facing (usage / development).
+- `README.md` (English) and `README.zh.md` (Chinese) are the outward-facing pair: one document in
+  two languages, the same sections in the same order, each opening with a link to the other. Change
+  both sides in the same commit — `src/docs.test.ts` checks the cross-links, the badge block and the
+  heading structure.
+- `CONTRIBUTING.md` — English only; there is no translated twin.
 - `AGENTS.md` / `notes/` / `skill/` — Chinese-dominant, inward-facing (AI navigation, records, the
   manual itself). Identifiers, commands and paths stay English.
+- npm auto-includes both `README.md` and `README.zh.md` in the published tarball (the `README*` name
+  rule), so neither needs an entry in `files`.
 
 Issue, plan and milestone tracking lives in `mint`, not in these docs; the workflow is the `mint`
 skill's business.
