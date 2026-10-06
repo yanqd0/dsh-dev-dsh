@@ -1,7 +1,5 @@
-# dsh 模块与子系统索引（占位：A/B 批已就位）
+# dsh 模块与子系统索引
 
-> 占位｜归属：dsh 本体｜填充：plan #16
->
 > 本文是 `references/dsh/index.md` 的子页。
 
 **事实 pin**：`deepseek-harness@dsh-v0.2.0-rc.2`（本册逐页填充时按页重声明）。

@@ -1,7 +1,5 @@
-# 内置 plugin 索引：位置分类与冲突语义（占位：位置机制已就位）
+# 内置 plugin 索引：位置分类与冲突语义
 
-> 占位｜归属：dsh 本体｜填充：plan #16
->
 > 本文是 `references/dsh/index.md` 的子页。
 
 **事实 pin**：`deepseek-harness@dsh-v0.2.0-rc.2`（逐页填充时按页重声明）。
