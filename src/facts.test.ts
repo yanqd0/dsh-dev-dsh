@@ -400,6 +400,41 @@ const facts: Fact[] = [
     line: 61,
     note: '元数据经 Node ESM resolver 解析；缺失资源（含 exports 未暴露）静默降级',
   },
+  {
+    id: 'package-meta-reader',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/boot/app-boot/src/package-meta.ts',
+    line: 148,
+    note: 'readPluginMeta：仅吃 bare 包名；解析 <pkg>/package.json 与 <pkg>/locale/en.json 两条路径，失败静默退回包名/空描述',
+  },
+  {
+    id: 'package-meta-localized-text',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/boot/app-boot/src/package-meta.ts',
+    line: 124,
+    note: 'title 回退链 = locale meta.title → manifest name → 模块 specifier；description 同链但最终回退为空串',
+  },
+  {
+    id: 'package-meta-icon-limits',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/boot/app-boot/src/package-meta.ts',
+    line: 15,
+    note: '图标上限 256 KiB 且须为 manifest 内相对路径（realpath 后仍在 manifest 目录）；失败只丢图标、保留文字',
+  },
+  {
+    id: 'package-meta-locale-language-id',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/boot/app-boot/src/package-meta.ts',
+    line: 101,
+    note: 'locale 目录只在 en.json 可解析时枚举；文件名必须是语言 id（LANGUAGE_ID 正则），否则报错而非静默跳过',
+  },
+  {
+    id: 'plugin-manager-reads-plugin-meta',
+    source: 'deepseek-harness@dsh-v0.2.0-rc.2',
+    path: 'packages/boot/plugin-manager/src/index.ts',
+    line: 304,
+    note: 'plugin-manager 逐行以 profile 的 package.json 为 parentURL 调 readPluginMeta，把 meta 带进 bundle 列表',
+  },
 
   // dsh 0.2.0：`skill/references/dsh/` 顶层页（架构 / 插件模型 / 扩展点 / 设计原理 / 概念）的指针。
   // 这些 fact 按 checkout 版本复核（见下方 census）；换基准时同步重校 pin。

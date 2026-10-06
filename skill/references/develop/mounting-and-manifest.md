@@ -101,10 +101,12 @@ dsh plugin --profile <p> remove <pkg>    # 依赖与层一起移除
 
 ## 6. 清单字段中真正被读的那些
 
-- **`exports`**：显示元数据（title/description/icon）经 Node ESM resolver 读
-  `<pkg>/package.json` 与 `<pkg>/locale/en.json`，因此要让前者可解析；`ERR_PACKAGE_PATH_NOT_EXPORTED`、
-  `ERR_MODULE_NOT_FOUND`、`MODULE_NOT_FOUND`、`ENOENT`、`ENOTDIR` 都按"资源缺失"处理，
-  只降级显示、不报错（`packages/boot/app-boot/src/package-meta.ts:61`）。
+- **`exports`**：显示元数据（title/description/icon）由 `readPluginMeta(specifier, parentURL)` 读
+  （`packages/boot/app-boot/src/package-meta.ts:148`），它经 Node ESM resolver 解析
+  `<pkg>/package.json` 与 `<pkg>/locale/en.json` 两条路径（`:148`–`:150`），因此**两条子路径都要在
+  `exports` 里可达**：`ERR_PACKAGE_PATH_NOT_EXPORTED`、`ERR_MODULE_NOT_FOUND`、`MODULE_NOT_FOUND`、
+  `ENOENT`、`ENOTDIR` 都按「资源缺失」处理（`optionalResourcePath`，`:65`），只降级显示、不报错。
+  细节与自查见 §6.1。
 - **peer 兼容门禁**：只检查 `peerDependencies` 里名为 `@deepseek-ai/dsh` 或 `@deepseek-ai/dsh-*` 的项，
   不匹配时打印 `Plugin <name>@<version> is incompatible with dsh <runtime>: peerDependencies ...`
   并给出 `dsh plugin allow-version` 豁免路径（`packages/boot/app-boot/src/plugin-compatibility.ts:98`）。
@@ -113,6 +115,50 @@ dsh plugin --profile <p> remove <pkg>    # 依赖与层一起移除
 - **`engines`**：`dsh` / `node` / `npm` 只是声明，注释明说 "DSH compatibility is declarative until
   a reader enforces it"，当前没有 reader 读取（`packages/util/package-manifest/src/types.ts:22`）——
   写成什么都不会被校验，别把它当兼容性保证。
+
+### 6.1 插件页的标题 / 描述 / 图标（reader 契约与自证）
+
+用户在哪里看到它：设置 → 插件 → 插件列表的卡片描述（2 行截断），以及侧栏插件面板包卡片的详情页。
+消费方是宿主插件清单与 plugin-manager（`packages/boot/plugin-manager/src/index.ts:304` 逐行调 reader）。
+
+reader 的完整口径（缺任何一条都会**静默**变干净）：
+
+- **它只吃 bare 包名**：`readPluginMeta` 先 `barePackageName(specifier)`，带子路径的 specifier 直接
+  返回 `undefined`（`:149`）。
+- **标题回退链**：`locale` 字典里的 `meta.title` → manifest 的 `name` → 完整模块 specifier；
+  **描述回退链**：`meta.description` → manifest 的 `description` → **空串**（`:154`–`:155`）。
+  所以「没描述」既可能是没写，也可能是写了但没被解析到。
+- **两条路径都受 `exports` 门禁**：`<pkg>/package.json` 与 `<pkg>/locale/en.json` 都经 Node resolver，
+  解析失败被 `optionalResourcePath` 静默吞掉（`:65`）；被吞掉时 `title` 退到完整包名、`description` 退到空串。
+- **`locale/` 只在 `en.json` 可解析时才枚举**（`:150`）：只放 `zh.json` 无效；目录里出现文件名不是语言 id 的
+  `.json` 会让整条元数据变成 `{error}`（`LANGUAGE_ID`，`:10`，报
+  `<pkg>/locale/<file> must use a language id as its filename`）。
+- **字典文件里 `meta.title` / `meta.description` 是普通字符串**，语言由**文件名**决定（`en.json` = 英文），
+  不是 `{en, zh}` 对象——写成对象就报 `meta.title must be a non-empty string`。
+- **图标只来自 manifest**：`icon` 是 manifest 内的**相对路径**，SVG/PNG/JPEG/WebP、≤256 KiB
+  （`MAX_ICON_BYTES`，`:15`）、realpath 后必须仍在 manifest 目录内；图标失败只丢图标，文字保留
+  （失败时整体带 `error` 字段，见 `:163`）。
+
+**改 `package.json` 必须重启 harness**（实测）：Node 内置 resolver 把解析过的 `package.json` 按**进程**
+缓存，mtime 变更不失效。于是会出现「磁盘已修好、headless 复核已返回标题+描述，但插件页仍无描述」——
+**重启后**即正常。相反，`locale/*.json` 的**内容**是按请求读盘的，改字典不必重启。
+
+**headless 自查**（不需要浏览器、不需要布局）：
+
+```sh
+DSH_PKG="$(readlink -f "$(ls -1d "$HOME"/.nvm/versions/node/*/lib/v11/*/node_modules/@deepseek-ai/dsh | tail -n1)")"
+DSH_PKG="$DSH_PKG" node --input-type=module -e '
+import { createRequire } from "node:module";
+const req = createRequire(process.env.DSH_PKG + "/lib/bin.js");
+const { readPluginMeta } = await import(req.resolve("@deepseek-ai/dsh-app-boot"));
+const parent = "file://" + process.env.HOME + "/.dsh/profiles/<profile>/package.json";
+console.log(JSON.stringify(readPluginMeta("<包名>", parent), null, 2));
+'
+```
+
+`parentURL` 必须是**装了该包的 profile 的 `package.json`**（就是宿主实际传入的那个基准）；
+用别的基准会得到 `ERR_MODULE_NOT_FOUND`→`undefined` 的**假阴性**。包侧还可以用自引用解析复刻同一条规则：
+`createRequire(<pkgRoot>/package.json).resolve("<包名>/package.json")`，解析失败即证明元数据必然缺失。
 
 ## 7. 入口形态
 

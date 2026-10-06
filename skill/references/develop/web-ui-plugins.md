@@ -174,8 +174,11 @@ export function apply(ctx: Context) {
 | `slot "<key>" is already declared (by …)` / `slot factory "<name>" already has a definition`                                        | slot 重声明 / 同 id 二次注册          | 一个 declarer，改 id                   |
 | 200 但 body 是 index.html                                                                                                           | 请求落 SPA fallback（路由没命中）     | 查 `kind` 与 `path` 写法（§7）         |
 | 404 且 body 为空                                                                                                                    | 同上；fallback 在 dist 里找不到该文件 | 同上                                   |
+| 插件页（侧栏插件面板 / 设置 → 插件）只有包名、无标题与描述，且没有任何提示                                                          | `exports` 未暴露 `./package.json`     | 补 `"./package.json"`，见下            |
 
 **静默项**：`platform !== 'web'` 时宿主**不报错**，只是把该包当成非 client 行——「插件完全不出现」先查这里。
+展示元数据（标题 / 描述 / 图标）另有一整条静默链：reader、`exports` 门禁与 locale 目录纪律见
+`references/develop/mounting-and-manifest.md` §6 及其 §6.1——**它不报错，只是页面变干净**。
 
 ## 10. 验收
 
