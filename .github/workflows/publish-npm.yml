@@ -1,8 +1,17 @@
-# npm 发布：tag vX.Y.Z 激活；gate 校验 tag 与 package.json 版本一致 + stable 判定。
-# 双注册表发布 @yanqd0/dsh-dev-dsh：npmjs 走 OIDC trusted publishing
-# （permissions: id-token: write，npm publish --provenance 免 token）；GitHub Packages
-# 走 GITHUB_TOKEN + packages: write，同名直接发布，无需改名。
-# 预发布（-alpha/-beta）只跑 gate + test，不发布。
+# npm 发布：tag vX.Y.Z（或 X.Y.Z）激活；gate 校验 tag 与 package.json 版本一致 + stable 判定。
+#
+# stable 的执行顺序（job needs 强制，不是约定）：
+#   gate → test → publish（npmjs，OIDC trusted publishing：id-token: write +
+#   npm publish --provenance，免 token）→ publish-github（GitHub Packages，GITHUB_TOKEN +
+#   packages: write，同名 @yanqd0/dsh-dev-dsh 直接发布、无需改名）→ release
+#   （GitHub Release，notes 由本 tag 的 commit 生成）。
+# 两条注册表都成功之后才建 Release：宁可没有 Release 页，也不要半发布。
+#
+# 预发布（-alpha/-beta，版本号含 `-`）只跑 gate + test，不发布、不建 Release。
+#
+# 幂等：两个 publish 作业在发布前先探目标版本是否已存在（`npm view <pkg>@<version> version`），
+# 存在即跳过。否则 publish-github 失败后重跑同一 tag 会卡在 npmjs「版本已存在」，
+# Release 永远建不出来。探针失败（网络等）不阻断，仍走 npm publish——注册表自身会拒绝重复版本。
 #
 # 首次发布必须走本地（npmjs 的 trusted publisher 只能在包已存在后配置）：
 #   npm publish --access public --tag alpha   # 预发布用 alpha tag
@@ -21,6 +30,7 @@ jobs:
   gate:
     runs-on: ubuntu-latest
     outputs:
+      version: ${{ steps.check.outputs.version }}
       is_stable: ${{ steps.check.outputs.is_stable }}
     steps:
       - uses: actions/checkout@v5
@@ -31,6 +41,7 @@ jobs:
           if [ "$TAG" != "$VERSION" ]; then
             echo "::error::tag($TAG) != package.json($VERSION)"; exit 1
           fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           case "$VERSION" in
             *-*) echo "is_stable=false" >> "$GITHUB_OUTPUT" ;;
             *)   echo "is_stable=true" >> "$GITHUB_OUTPUT" ;;
@@ -51,6 +62,7 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm check-types
+      - run: pnpm format:check
       - run: pnpm test:coverage
       - run: pnpm build
       - run: pnpm pack:check
@@ -75,7 +87,16 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
       - run: npm install -g npm@11 # OIDC 发布需 npm >= 11.5.1
-      - run: npm publish --provenance --access public
+      - name: Publish to npmjs (skip if this version exists)
+        env:
+          VERSION: ${{ needs.gate.outputs.version }}
+        run: |
+          PUBLISHED="$(npm view "@yanqd0/dsh-dev-dsh@$VERSION" version 2>/dev/null || true)"
+          if [ -n "$PUBLISHED" ]; then
+            echo "@yanqd0/dsh-dev-dsh@$VERSION is already on npmjs — skipping publish"
+          else
+            npm publish --provenance --access public
+          fi
 
   publish-github:
     # GitHub Packages：npmjs 成功后才发；同名 @yanqd0/dsh-dev-dsh 直接发布（无需改名）
@@ -96,14 +117,22 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
-      - name: Publish to GitHub Packages
+      - name: Publish to GitHub Packages (skip if this version exists)
         env:
           NODE_AUTH_TOKEN: ${{ github.token }}
-        run: npm publish
+          VERSION: ${{ needs.gate.outputs.version }}
+        run: |
+          PUBLISHED="$(npm view "@yanqd0/dsh-dev-dsh@$VERSION" version \
+            --registry https://npm.pkg.github.com 2>/dev/null || true)"
+          if [ -n "$PUBLISHED" ]; then
+            echo "@yanqd0/dsh-dev-dsh@$VERSION is already on GitHub Packages — skipping publish"
+          else
+            npm publish
+          fi
 
   release:
-    # GitHub Release：notes 从本 tag 的 commit 生成（本仓无 CHANGELOG，不引用它）。
-    needs: [gate, test, publish]
+    # GitHub Release：两条注册表都成功后才建；notes 从本 tag 的 commit 生成（本仓无 CHANGELOG）。
+    needs: [gate, test, publish, publish-github]
     runs-on: ubuntu-latest
     permissions:
       contents: write # 创建 Release（顶层 contents: read，此处覆盖）
