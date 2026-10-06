@@ -14,8 +14,8 @@
  *   consent, and the tool refuses with the exact fallback (bash + the ordinary
  *   escalation flow, or `uv.autoApprove` as an explicit trust switch).
  * - **Once per session per class.** A grant is remembered by
- *   `sessionId + classId`, mirroring dsh-mint's B-v2 escalation memory: the
- *   first `uv tool install` in a session asks, the rest do not. `grant: 'call'`
+ *   `sessionId + classId`: the first `uv tool install` in a session asks, the
+ *   rest do not. `grant: 'call'`
  *   removes the memory entirely; `autoApprove: true` skips the prompt and says
  *   so in a note, so the bypass stays visible in the transcript.
  */
